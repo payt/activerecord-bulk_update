@@ -61,22 +61,19 @@ module ActiveRecord
         Arel::Nodes::From.new(
           values_list: values_list,
           as: source,
-          columns: (filtering_attributes + updating_attributes.map { |attr| "_#{attr}" }).map { |e| source[e] }
+          columns: (filtering_attributes + updating_attributes.map { |attr| "_#{attr}" }).map { |attr| source[attr] }
         )
       end
 
       def values_list
-        values = nil
+        values = []
+
+        values << first_row.first.slice(*filtering_attributes).to_a
+          .concat(first_row.last.slice(*updating_attributes).to_a)
+          .map { |attr, value| Arel::Nodes::Cast.new(value, columns_hash[arel_table[attr].name].sql_type).to_arel_sql }
 
         attributes.each do |idxs, vals|
-          if values
-            values << filtering_attributes.map { |attr| idxs.fetch(attr) } + updating_attributes.map { |attr| vals.fetch(attr) }
-          else
-            values = []
-            values << (idxs.to_a + vals.to_a).map do |attr, value|
-              Arel::Nodes::Cast.new(value, columns_hash[arel_table[attr].name].sql_type).to_arel_sql
-            end
-          end
+          values << filtering_attributes.map { |attr| idxs.fetch(attr) } + updating_attributes.map { |attr| vals.fetch(attr) }
         end
 
         Arel::Nodes::ValuesList.new(values)
