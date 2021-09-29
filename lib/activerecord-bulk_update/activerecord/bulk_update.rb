@@ -81,7 +81,7 @@ module ActiveRecord
         raise ActiveRecord::ActiveRecordError, "cannot bulk update a model without primary_key" unless primary_key
 
         filtering_attributes << primary_key
-        records.each { |record| @updating_attributes += record.changed }.uniq
+        @updating_attributes = records.flat_map(&:changed).uniq
 
         records.each do |record|
           raise TypeError, "expected #{model.new}, got #{record}" unless record.is_a?(model.klass)
