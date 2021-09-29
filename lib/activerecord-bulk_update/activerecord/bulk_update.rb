@@ -3,51 +3,48 @@
 module ActiveRecord
   # New class that builds the query to update multiple records in a single statement.
   class BulkUpdate
-    attr_reader :model, :attributes, :records
+    attr_reader :model, :updates, :values, :filtering_attributes, :updating_attributes, :records
 
     delegate :to_sql, to: :update_manager
     delegate :arel, :arel_table, :columns_hash, :primary_key, to: :model
 
     def initialize(model, updates)
       @model = model
+      @updates = updates
+      @values = []
+      @filtering_attributes = []
+      @updating_attributes = []
 
       case updates
       when Hash
-        @attributes = updates.dup.each { |row| row.map(&:stringify_keys!) }
-        verify_attributes
+        extract_values_from_hash
       when Array, Relation
-        @records = updates if updates.all?(model.klass)
-        extract_attributes_from_records if records
+        @records = updates
+        extract_values_from_records
+      else
+        raise TypeError, "expected {}, [] or ActiveRecord::Relation, got #{updates}"
       end
-
-      raise TypeError, "expected {}, [#{model.new}] or #{model.name}::ActiveRecord_Relation, got #{updates}" unless attributes
     end
 
     def execute
-      count = 0 if attributes.all?(&:empty?)
-      count ||= model.connection.update(update_manager, "Bulk Update").tap { model.reset }
+      return records || 0 if values.none?
+
+      count = model.connection.update(update_manager, "Bulk Update").tap { model.reset }
       records&.each(&:changes_applied) || count
-    end
-
-    def filtering_attributes
-      @filtering_attributes ||= first_row.first.keys.sort
-    end
-
-    def updating_attributes
-      @updating_attributes ||= first_row.last.keys.sort
     end
 
     private
       def update_manager
-        stmt = Arel::UpdateManager.new
         arel.source.left = arel_table
+
+        stmt = Arel::UpdateManager.new
         stmt.table(arel.source)
         stmt.key = arel_table[primary_key]
         stmt.take(arel.limit)
         stmt.offset(arel.offset)
         stmt.order(*arel.orders)
         stmt.wheres = arel.constraints
-        filtering_attributes.each { |attr| arel.where(source[attr].eq(arel_table[attr])) }
+        filtering_attributes.each { |attr| arel.where(arel_table[attr].eq(source[attr])) }
         stmt.set(updating_attributes.map { |attr| [arel_table[attr], source["_#{attr}"]] })
         stmt.ast.from = from
         stmt
@@ -65,43 +62,54 @@ module ActiveRecord
         )
       end
 
+      # NOTE: the ValuesList does not know about the datatypes of the columns in the database and will therefore pass
+      # the values on as they are given. It will leave some values unquoted, like integers and booleans, which can
+      # result in a PG::DatatypeMismatch when, for example, given an Integer for a Varchar column. ActiveRecord would
+      # cast this Integer to a String while building the sql, is that something that should be implemented here?
       def values_list
-        values = []
+        values[0] = (filtering_attributes + updating_attributes).zip(values[0]).map do |attr, value|
+          column = columns_hash[arel_table[attr].name]
+          raise ActiveModel::UnknownAttributeError.new(model, attr) unless column
 
-        values << first_row.first.slice(*filtering_attributes).to_a
-          .concat(first_row.last.slice(*updating_attributes).to_a)
-          .map { |attr, value| Arel::Nodes::Cast.new(value, columns_hash[arel_table[attr].name].sql_type).to_arel_sql }
-
-        attributes.each do |idxs, vals|
-          values << filtering_attributes.map { |attr| idxs.fetch(attr) } + updating_attributes.map { |attr| vals.fetch(attr) }
+          Arel::Nodes::Cast.new(value, column.sql_type).to_arel_sql
         end
 
         Arel::Nodes::ValuesList.new(values)
       end
 
-      def first_row
-        @first_row ||= attributes.first
-      end
+      def extract_values_from_records
+        raise ActiveRecord::ActiveRecordError, "cannot bulk update a model without primary_key" unless primary_key
 
-      def extract_attributes_from_records
-        updating_attributes = records.flat_map(&:changed).uniq
+        filtering_attributes << primary_key
+        records.each { |record| @updating_attributes += record.changed }.uniq
 
-        @attributes = records.select(&:has_changes_to_save?).map do |record|
-          raise ActiveRecord::ActiveRecordError, "cannot update a new record" unless record[primary_key]
+        records.each do |record|
+          raise TypeError, "expected #{model.new}, got #{record}" unless record.is_a?(model.klass)
+          raise ActiveRecord::ActiveRecordError, "cannot update a new record" unless record.persisted?
 
-          [{ primary_key => record.public_send("#{primary_key}_was") }, record.slice(*updating_attributes)]
-        end.to_h
-      end
+          changes = record.values_at(*updating_attributes)
+          next if changes.none?
 
-      def verify_attributes
-        (filtering_attributes + updating_attributes).each do |attr|
-          raise ActiveModel::UnknownAttributeError.new(model, attr) unless columns_hash[arel_table[attr].name]
+          # Taking the old value of the primary_key allows for the updating of the primary_key.
+          values << [record.public_send("#{primary_key}_was"), *changes]
         end
+      end
 
-        return if attributes.keys.all? { |row| row.keys.sort == filtering_attributes } &&
-                  attributes.values.all? { |row| row.keys.sort == updating_attributes }
+      # NOTE: expect all keys to be of the same type, either Symbol or String, and expects them to be in the same order.
+      def extract_values_from_hash
+        return unless first_row = updates.first
 
-        raise ArgumentError, "All objects being updated must have the same keys"
+        @filtering_attributes = first_row.first.keys
+        @updating_attributes = first_row.last.keys
+
+        return unless filtering_attributes.any? && updating_attributes.any?
+
+        updates.each do |filter, update|
+          raise ArgumentError, "all filtering Hashes must have the same keys" if filter.keys != filtering_attributes
+          raise ArgumentError, "all updating Hashes must have the same keys" if update.keys != updating_attributes
+
+          values << filter.values_at(*filtering_attributes).concat(update.values_at(*updating_attributes))
+        end
       end
   end
 end
