@@ -81,7 +81,7 @@ AND   "users"."active" = TRUE
 - Only works when all records belong to the same model
 
 ### TODO
-- Add tests!
+- Add CI build for tests and linting!
 - Add the option to validate records prior to updating?
 - Add the option to execute callbacks?
 - Add the option to update the updated_at column?
