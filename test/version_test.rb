@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "./tests/test_helper"
+require "./test/test_helper"
 
 module ActiveRecord
   describe BulkUpdate do

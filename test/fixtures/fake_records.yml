@@ -1,0 +1,14 @@
+first:
+  name: first
+  active: true
+  rank: 1
+
+second:
+  name: second
+  active: true
+  rank: 2
+
+third:
+  name: third
+  active: false
+  rank: 3

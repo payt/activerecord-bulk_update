@@ -9,5 +9,6 @@ require "active_support"
 require "active_support/core_ext/module/delegation"
 
 require_relative "support/fake_record"
+require_relative "support/assert_change"
 
 require "activerecord-bulk_update"
