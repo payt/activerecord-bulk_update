@@ -8,7 +8,7 @@ module Arel
     class From < Node
       attr_accessor :as, :columns, :values_list
 
-      def initialize(values_list: [], as: nil, columns: nil)
+      def initialize(values_list, as, columns)
         super()
         @values_list = values_list
         @as = as

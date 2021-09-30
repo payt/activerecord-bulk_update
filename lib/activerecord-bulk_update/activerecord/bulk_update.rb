@@ -56,9 +56,9 @@ module ActiveRecord
 
       def from
         Arel::Nodes::From.new(
-          values_list: values_list,
-          as: source,
-          columns: (filtering_attributes + updating_attributes.map { |attr| "_#{attr}" }).map { |attr| source[attr] }
+          values_list,
+          source,
+          (filtering_attributes + updating_attributes.map { |attr| "_#{attr}" }).map { |attr| source[attr] }
         )
       end
 
