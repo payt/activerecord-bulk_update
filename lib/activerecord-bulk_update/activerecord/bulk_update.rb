@@ -73,13 +73,14 @@ module ActiveRecord
       end
 
       def extract_values_from_records
-        raise ActiveRecord::ActiveRecordError, "cannot bulk update a model without primary_key" unless primary_key
+        raise ActiveRecordError, "cannot bulk update a model without primary_key" unless primary_key
         raise TypeError, "expected [] or ActiveRecord::Relation, got #{updates}" unless updates.is_a?(Array) || updates.is_a?(Relation)
 
         @filtering_attributes = [primary_key]
         @updating_attributes = updates.flat_map do |record|
           raise TypeError, "expected #{model.new}, got #{record}" unless record.is_a?(model.klass)
-          raise ActiveRecord::ActiveRecordError, "cannot update a new record" unless record.persisted?
+          raise ActiveRecordError, "cannot update a new record" if record.new_record?
+          raise ActiveRecordError, "cannot update a destroyed record" if record.destroyed?
 
           record.changed
         end.uniq
@@ -88,8 +89,8 @@ module ActiveRecord
           changes = record.values_at(*updating_attributes)
           next if changes.none?
 
-          # Taking the old value of the primary_key allows for the updating of the primary_key.
-          values << [record.public_send("#{primary_key}_was"), *changes]
+          # Taking the current value of the id allows for the updating of the primary_key.
+          values << [record.id_in_database, *changes]
         end
       end
 
