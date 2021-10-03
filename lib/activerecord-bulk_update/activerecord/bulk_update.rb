@@ -68,6 +68,7 @@ module ActiveRecord
       def values_list
         values[0] = (filtering_attributes + updating_attributes).zip(values[0]).map do |attr, value|
           column = columns_hash[arel_table[attr].name]
+          binding.pry
           raise ActiveModel::UnknownAttributeError.new(model, attr) unless column
 
           Arel::Nodes::Cast.new(value, column.sql_type).to_arel_sql
