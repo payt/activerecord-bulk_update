@@ -4,11 +4,11 @@ require "./test/test_helper"
 
 module ActiveRecord
   describe BulkUpdate do
-    describe "#execute" do
-      attr_reader :updates
+    attr_reader :updates
 
-      def execute
-        BulkUpdate.new(@model, @updates).execute
+    describe "#update_records" do
+      def update_records
+        BulkUpdate.new(@model, @updates).update_records
       end
 
       before { @model = FakeRecord.all }
@@ -23,27 +23,111 @@ module ActiveRecord
         end
 
         it "updates the first record" do
-          assert_change(-> { fake_records(:first).reload.name }, to: "new") { execute }
+          assert_change(-> { fake_records(:first).reload.name }, to: "new") { update_records }
         end
 
         it "updates the second record" do
-          assert_change(-> { FakeRecord.find_by!(name: "second").active }, from: true, to: false) { execute }
+          assert_change(-> { FakeRecord.find_by!(name: "second").active }, from: true, to: false) { update_records }
         end
 
         it "updates the third record" do
-          assert_change(-> { FakeRecord.find_by!(name: "third").rank }, from: 3, to: 4) { execute }
+          assert_change(-> { FakeRecord.find_by!(name: "third").rank }, from: 3, to: 4) { update_records }
         end
 
         it "marks all changes as persisted" do
-          assert_change(-> { @updates.count(&:has_changes_to_save?) }, from: 3, to: 0) { execute }
+          assert_change(-> { @updates.count(&:has_changes_to_save?) }, from: 3, to: 0) { update_records }
         end
 
         it "returns the Array of records" do
-          assert_equal(@updates, execute)
+          assert_equal(@updates, update_records)
         end
       end
 
-      describe "when given a Hash with multiple updates to execute" do
+      #
+      # Scenarios in which nothing happens
+      #
+
+      describe "when given an empty Array" do
+        before { @updates = [] }
+
+        it "returns the Array" do
+          assert_equal(@updates, update_records)
+        end
+      end
+
+      describe "when given only records without changes" do
+        before { @updates = [fake_records(:first), fake_records(:third)] }
+
+        it "returns the Array" do
+          assert_equal(@updates, update_records)
+        end
+      end
+
+      describe "when given an empty ActiveRecord::Relation" do
+        before { @updates = FakeRecord.none }
+
+        it "returns the relation" do
+          assert_equal(@updates, update_records)
+        end
+      end
+
+      #
+      # Scenarios in which an exception is raised
+      #
+
+      describe "when given a record from a different model" do
+        before { @updates = [PhonyRecord.new] }
+
+        it "raises a exception" do
+          error = assert_raises(::TypeError) { update_records }
+          assert_match(/\Aexpected #<FakeRecord:.+, got #<PhonyRecord:.+>\z/, error.message)
+        end
+      end
+
+      describe "when given a record from a model that does not have a primary_key" do
+        before do
+          @model = PhonyRecord.all
+          @updates = [PhonyRecord.new]
+        end
+
+        it "raises a exception" do
+          assert_raises(::ActiveRecord::ActiveRecordError, "cannot bulk update a model without primary_key") { update_records }
+        end
+      end
+
+      describe "when given an unpersisted record" do
+        before { @updates = [FakeRecord.new] }
+
+        it "raises a exception" do
+          assert_raises(::ActiveRecord::ActiveRecordError, "cannot update a new record") { update_records }
+        end
+      end
+
+      describe "when given an Array of invalid datatypes" do
+        before { @updates = [Integer] }
+
+        it "raises a exception" do
+          assert_raises(::TypeError, "expected [] or ActiveRecord::Relation, got Integer") { update_records }
+        end
+      end
+
+      describe "when given an invalid datatype" do
+        before { @updates = Integer }
+
+        it "raises a exception" do
+          assert_raises(::TypeError, "expected [] or ActiveRecord::Relation, got Integer") { update_records }
+        end
+      end
+    end
+
+    describe "#update_by_hash" do
+      def update_by_hash
+        BulkUpdate.new(@model, @updates).update_by_hash
+      end
+
+      before { @model = FakeRecord.all }
+
+      describe "when given a Hash with multiple updates" do
         before do
           @updates = {
             { name: "first" } => { name: "new", active: true, rank: 1 },
@@ -53,19 +137,19 @@ module ActiveRecord
         end
 
         it "updates the first record" do
-          assert_change(-> { fake_records(:first).reload.name }, to: "new") { execute }
+          assert_change(-> { fake_records(:first).reload.name }, to: "new") { update_by_hash }
         end
 
         it "updates the second record" do
-          assert_change(-> { FakeRecord.find_by!(name: "second").active }, from: true, to: false) { execute }
+          assert_change(-> { FakeRecord.find_by!(name: "second").active }, from: true, to: false) { update_by_hash }
         end
 
         it "updates the third record" do
-          assert_change(-> { FakeRecord.find_by!(name: "third").rank }, from: 3, to: 4) { execute }
+          assert_change(-> { FakeRecord.find_by!(name: "third").rank }, from: 3, to: 4) { update_by_hash }
         end
 
         it "returns the number of updated records" do
-          assert_equal(3, execute)
+          assert_equal(3, update_by_hash)
         end
       end
 
@@ -79,85 +163,53 @@ module ActiveRecord
         end
 
         it "updates the first record" do
-          assert_change(-> { fake_records(:first).reload.rank }, from: 1, to: -1) { execute }
+          assert_change(-> { fake_records(:first).reload.rank }, from: 1, to: -1) { update_by_hash }
         end
 
         it "does not update the second record since the `active` filter does match its state in the db" do
-          refute_change(-> { fake_records(:second).reload.rank }, from: 2) { execute }
+          refute_change(-> { fake_records(:second).reload.rank }, from: 2) { update_by_hash }
         end
 
         it "updates the third record" do
-          assert_change(-> { fake_records(:third).reload.rank }, from: 3, to: -3) { execute }
+          assert_change(-> { fake_records(:third).reload.rank }, from: 3, to: -3) { update_by_hash }
         end
 
         it "returns the number of updated records" do
-          assert_equal(2, execute)
+          assert_equal(2, update_by_hash)
         end
       end
 
       #
-      # Scenarios in which nothing will happen
+      # Scenarios in which nothing happens
       #
-
-      describe "when given a record without changes" do
-        before { @updates = [fake_records(:first)] }
-
-        it "returns the Array" do
-          assert_equal(@updates, execute)
-        end
-      end
 
       describe "when given an empty Hash" do
         before { @updates = {} }
 
         it "returns 0" do
-          assert_equal(0, execute)
+          assert_equal(0, update_by_hash)
         end
       end
 
-      describe "when given an Hash of empty Hashes" do
-        before { @updates = { {} => {} } }
+      #
+      # Scenarios in which an exception is raised
+      #
 
-        it "returns 0" do
-          assert_equal(0, execute)
+      describe "when given an Hash without columns to select records by" do
+        before { @updates = { {} => { name: "first" } } }
+
+        it "raises a exception" do
+          assert_raises(::ArgumentError, "no filtering columns given") { update_by_hash }
         end
       end
 
       describe "when given an Hash without columns to update" do
         before { @updates = { { name: "first" } => {} } }
 
-        it "returns 0" do
-          assert_equal(0, execute)
+        it "raises a exception" do
+          assert_raises(::ArgumentError, "no updating columns given") { update_by_hash }
         end
       end
-
-      describe "when given an Hash without columns to select records by" do
-        before { @updates = { {} => { name: "first" } } }
-
-        it "returns 0" do
-          assert_equal(0, execute)
-        end
-      end
-
-      describe "when given an empty Array" do
-        before { @updates = [] }
-
-        it "returns the Array" do
-          assert_equal(@updates, execute)
-        end
-      end
-
-      describe "when given an empty ActiveRecord::Relation" do
-        before { @updates = FakeRecord.none }
-
-        it "returns the relation" do
-          assert_equal(@updates, execute)
-        end
-      end
-
-      #
-      # Scenarios in which an exceptin is raised
-      #
 
       describe "when given different number of filtering columns" do
         before do
@@ -167,8 +219,8 @@ module ActiveRecord
           }
         end
 
-        it "raises a ArgumentError" do
-          assert_raises(::ArgumentError, "all filtering Hashes must have the same keys") { execute }
+        it "raises a exception" do
+          assert_raises(::ArgumentError, "all filtering Hashes must have the same keys") { update_by_hash }
         end
       end
 
@@ -180,66 +232,46 @@ module ActiveRecord
           }
         end
 
-        it "raises a ArgumentError" do
-          assert_raises(::ArgumentError, "all updating Hashes must have the same keys") { execute }
+        it "raises a exception" do
+          assert_raises(::ArgumentError, "all updating Hashes must have the same keys") { update_by_hash }
         end
       end
 
       describe "when given a filtering column that does not exist" do
         before { @updates = { { names: "first" } => { name: "new" } } }
 
-        it "raises a ActiveModel::UnknownAttributeError" do
+        it "raises a exception" do
           assert_raises(
             ::ActiveModel::UnknownAttributeError,
             "unknown attribute 'names' for FakeRecord::ActiveRecord_Relation."
-          ) { execute }
+          ) { update_by_hash }
         end
       end
 
       describe "when given a updating column that does not exist" do
         before { @updates = { { name: "first" } => { names: "new" } } }
 
-        it "raises a ActiveModel::UnknownAttributeError" do
+        it "raises a exception" do
           assert_raises(
             ::ActiveModel::UnknownAttributeError,
             "unknown attribute 'names' for FakeRecord::ActiveRecord_Relation."
-          ) { execute }
+          ) { update_by_hash }
         end
       end
 
-      describe "when given a record from a different model" do
-        before { @updates = [PhonyRecord.new] }
+      describe "when given an Hash containing an invalid filter" do
+        before { @updates = { name: "new" } }
 
-        it "raises a ActiveRecord::ActiveRecordError" do
-          error = assert_raises(::TypeError) { execute }
-          assert_match(/\Aexpected #<FakeRecord:.+, got #<PhonyRecord:.+>\z/, error.message)
-        end
-      end
-
-      describe "when given a record from a model that does not have a primary_key" do
-        before do
-          @model = PhonyRecord.all
-          @updates = [PhonyRecord.new]
-        end
-
-        it "raises a ActiveRecord::ActiveRecordError" do
-          assert_raises(::ActiveRecord::ActiveRecordError, "cannot bulk update a model without primary_key") { execute }
-        end
-      end
-
-      describe "when given an unpersisted record" do
-        before { @updates = [FakeRecord.new] }
-
-        it "raises a ActiveRecord::ActiveRecordError" do
-          assert_raises(::ActiveRecord::ActiveRecordError, "cannot update a new record") { execute }
+        it "raises a exception" do
+          assert_raises(::TypeError, "expected {}, got name") { update_by_hash }
         end
       end
 
       describe "when given an invalid datatype" do
         before { @updates = Integer }
 
-        it "raises a TypeError" do
-          assert_raises(::TypeError, "expected {}, [] or ActiveRecord::Relation, got Integer") { execute }
+        it "raises a exception" do
+          assert_raises(::TypeError, "expected {}, got Integer") { update_by_hash }
         end
       end
     end

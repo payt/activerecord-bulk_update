@@ -3,37 +3,36 @@
 module ActiveRecord
   # New class that builds the query to update multiple records in a single statement.
   class BulkUpdate
-    attr_reader :model, :updates, :values, :filtering_attributes, :updating_attributes, :records
+    attr_reader :model, :updates, :values, :filtering_attributes, :updating_attributes
 
-    delegate :to_sql, to: :update_manager
     delegate :arel, :arel_table, :columns_hash, :primary_key, to: :model
 
     def initialize(model, updates)
       @model = model
       @updates = updates
       @values = []
-      @filtering_attributes = []
-      @updating_attributes = []
-
-      case updates
-      when Hash
-        extract_values_from_hash
-      when Array, Relation
-        @records = updates
-        extract_values_from_records
-      else
-        raise TypeError, "expected {}, [] or ActiveRecord::Relation, got #{updates}"
-      end
     end
 
-    def execute
-      return records || 0 if values.none?
+    def update_records
+      extract_values_from_records
+      return updates if values.none?
 
-      count = model.connection.update(update_manager, "Bulk Update").tap { model.reset }
-      records&.each(&:changes_applied) || count
+      execute
+      updates.each(&:changes_applied)
+    end
+
+    def update_by_hash
+      extract_values_from_hash
+      return 0 if values.none?
+
+      execute
     end
 
     private
+      def execute
+        model.connection.update(update_manager, "Bulk Update").tap { model.reset }
+      end
+
       def update_manager
         arel.source.left = arel_table
 
@@ -79,14 +78,17 @@ module ActiveRecord
 
       def extract_values_from_records
         raise ActiveRecord::ActiveRecordError, "cannot bulk update a model without primary_key" unless primary_key
+        raise TypeError, "expected [] or ActiveRecord::Relation, got #{updates}" unless updates.is_a?(Array) || updates.is_a?(Relation)
 
-        filtering_attributes << primary_key
-        @updating_attributes = records.flat_map(&:changed).uniq
-
-        records.each do |record|
+        @filtering_attributes = [primary_key]
+        @updating_attributes = updates.flat_map do |record|
           raise TypeError, "expected #{model.new}, got #{record}" unless record.is_a?(model.klass)
           raise ActiveRecord::ActiveRecordError, "cannot update a new record" unless record.persisted?
 
+          record.changed
+        end.uniq
+
+        updates.each do |record|
           changes = record.values_at(*updating_attributes)
           next if changes.none?
 
@@ -95,14 +97,19 @@ module ActiveRecord
         end
       end
 
-      # NOTE: expect all keys to be of the same type, either Symbol or String, and expects them to be in the same order.
+      # NOTE: expects the keys in each of the Hahes to be identical. all the same type (Symbol or String) and in order.
       def extract_values_from_hash
-        return unless first_row = updates.first
+        raise TypeError, "expected {}, got #{updates}" unless updates.is_a?(Hash)
+        return if updates.empty?
 
-        @filtering_attributes = first_row.first.keys
-        @updating_attributes = first_row.last.keys
+        @filtering_attributes, @updating_attributes = updates.first.then do |filter, update|
+          raise TypeError, "expected {}, got #{filter}" unless filter.is_a?(Hash)
+          raise TypeError, "expected {}, got #{update}" unless update.is_a?(Hash)
+          raise ArgumentError, "no filtering attributes given" if filter.empty?
+          raise ArgumentError, "no updating attributes given" if update.empty?
 
-        return unless filtering_attributes.any? && updating_attributes.any?
+          [filter.keys, update.keys]
+        end
 
         updates.each do |filter, update|
           raise ArgumentError, "all filtering Hashes must have the same keys" if filter.keys != filtering_attributes

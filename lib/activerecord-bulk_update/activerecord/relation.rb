@@ -2,9 +2,15 @@
 
 module ActiveRecord
   class Relation
-    # New method to be able to execute the BulkUpdate on an existing scope.
-    def bulk_update(updates)
-      BulkUpdate.new(self, updates).execute
+    # def bulk_update(updates); end
+    # def bulk_update!(updates); end
+
+    def bulk_update_all(updates)
+      BulkUpdate.new(self, updates).update_by_hash
+    end
+
+    def bulk_update_columns(updates)
+      BulkUpdate.new(self, updates).update_records
     end
   end
 end
