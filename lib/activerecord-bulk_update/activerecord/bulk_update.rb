@@ -61,14 +61,9 @@ module ActiveRecord
         )
       end
 
-      # NOTE: the ValuesList does not know about the datatypes of the columns in the database and will therefore pass
-      # the values on as they are given. It will leave some values unquoted, like integers and booleans, which can
-      # result in a PG::DatatypeMismatch when, for example, given an Integer for a Varchar column. ActiveRecord would
-      # cast this Integer to a String while building the sql, is that something that should be implemented here?
       def values_list
         values[0] = (filtering_attributes + updating_attributes).zip(values[0]).map do |attr, value|
           column = columns_hash[arel_table[attr].name]
-          binding.pry
           raise ActiveModel::UnknownAttributeError.new(model, attr) unless column
 
           Arel::Nodes::Cast.new(value, column.sql_type).to_arel_sql
@@ -112,11 +107,17 @@ module ActiveRecord
           [filter.keys, update.keys]
         end
 
+        types = (filtering_attributes + updating_attributes).map { |attr| model.type_for_attribute(attr) }
+
         updates.each do |filter, update|
           raise ArgumentError, "all filtering Hashes must have the same keys" if filter.keys != filtering_attributes
           raise ArgumentError, "all updating Hashes must have the same keys" if update.keys != updating_attributes
 
-          values << filter.values_at(*filtering_attributes).concat(update.values_at(*updating_attributes))
+          values <<
+            filter.values_at(*filtering_attributes)
+            .concat(update.values_at(*updating_attributes))
+            .zip(types)
+            .map { |value, type| type.cast(value) }
         end
       end
   end

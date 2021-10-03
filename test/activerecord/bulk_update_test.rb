@@ -43,6 +43,28 @@ module ActiveRecord
         end
       end
 
+      describe "when updating the primary key" do
+        before do
+          first = fake_records(:first).tap { |record| record.id = 0 }
+          @updates = [first]
+        end
+
+        it "updates the primary key of the record" do
+          assert_change(-> { FakeRecord.find_by!(name: "first").id }, to: 0) { update_records }
+        end
+      end
+
+      describe "when setting a value with a different datatype" do
+        before do
+          first = FakeRecord.find_by!(name: "first").tap { |record| record.name = 1234 }
+          @updates = [first]
+        end
+
+        it "updates the record with value casted to the correct datatype" do
+          assert_change(-> { fake_records(:first).reload.name }, to: "1234") { update_records }
+        end
+      end
+
       #
       # Scenarios in which nothing happens
       #
@@ -176,6 +198,19 @@ module ActiveRecord
 
         it "returns the number of updated records" do
           assert_equal(2, update_by_hash)
+        end
+      end
+
+      describe "when assigning values with a different datatype" do
+        before do
+          @updates = {
+            { name: "first" } => { name: 1234 },
+            { name: "second" } => { name: 5678 }
+          }
+        end
+
+        it "updates the record with value casted to the correct datatype" do
+          assert_change(-> { fake_records(:second).reload.name }, to: "5678") { update_by_hash }
         end
       end
 
