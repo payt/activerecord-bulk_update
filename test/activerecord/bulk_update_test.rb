@@ -55,13 +55,15 @@ module ActiveRecord
       end
 
       describe "when setting a value with a different datatype" do
+        # Test with at least 2 records since the values of the first will be explicitly casted.
         before do
           first = FakeRecord.find_by!(name: "first").tap { |record| record.name = 1234 }
-          @updates = [first]
+          second = FakeRecord.find_by!(name: "second").tap { |record| record.name = 5678 }
+          @updates = [first, second]
         end
 
         it "updates the record with value casted to the correct datatype" do
-          assert_change(-> { fake_records(:first).reload.name }, to: "1234") { update_records }
+          assert_change(-> { fake_records(:second).reload.name }, to: "5678") { update_records }
         end
       end
 
@@ -113,7 +115,8 @@ module ActiveRecord
         end
 
         it "raises a exception" do
-          assert_raises(::ActiveRecord::ActiveRecordError, "cannot bulk update a model without primary_key") { update_records }
+          error = assert_raises(::ActiveRecord::ActiveRecordError) { update_records }
+          assert_equal("cannot bulk update a model without primary_key", error.message)
         end
       end
 
@@ -121,7 +124,17 @@ module ActiveRecord
         before { @updates = [FakeRecord.new] }
 
         it "raises a exception" do
-          assert_raises(::ActiveRecord::ActiveRecordError, "cannot update a new record") { update_records }
+          error = assert_raises(::ActiveRecord::ActiveRecordError) { update_records }
+          assert_equal("cannot update a new record", error.message)
+        end
+      end
+
+      describe "when given an destroyed record" do
+        before { @updates = [fake_records(:first).tap(&:destroy!)] }
+
+        it "raises a exception" do
+          error = assert_raises(::ActiveRecord::ActiveRecordError) { update_records }
+          assert_equal("cannot update a destroyed record", error.message)
         end
       end
 
@@ -129,7 +142,8 @@ module ActiveRecord
         before { @updates = [Integer] }
 
         it "raises a exception" do
-          assert_raises(::TypeError, "expected [] or ActiveRecord::Relation, got Integer") { update_records }
+          error = assert_raises(::TypeError) { update_records }
+          assert_match(/\Aexpected #<FakeRecord:.+, got Integer\z/, error.message)
         end
       end
 
@@ -137,7 +151,8 @@ module ActiveRecord
         before { @updates = Integer }
 
         it "raises a exception" do
-          assert_raises(::TypeError, "expected [] or ActiveRecord::Relation, got Integer") { update_records }
+          error = assert_raises(::TypeError) { update_records }
+          assert_equal("expected [] or ActiveRecord::Relation, got Integer", error.message)
         end
       end
     end
@@ -202,6 +217,7 @@ module ActiveRecord
       end
 
       describe "when assigning values with a different datatype" do
+        # Test with at least 2 records since the values of the first will be explicitly casted.
         before do
           @updates = {
             { name: "first" } => { name: 1234 },
@@ -234,7 +250,8 @@ module ActiveRecord
         before { @updates = { {} => { name: "first" } } }
 
         it "raises a exception" do
-          assert_raises(::ArgumentError, "no filtering columns given") { update_by_hash }
+          error = assert_raises(::ArgumentError) { update_by_hash }
+          assert_equal("no filtering attributes given", error.message)
         end
       end
 
@@ -242,7 +259,8 @@ module ActiveRecord
         before { @updates = { { name: "first" } => {} } }
 
         it "raises a exception" do
-          assert_raises(::ArgumentError, "no updating columns given") { update_by_hash }
+          error = assert_raises(::ArgumentError) { update_by_hash }
+          assert_equal("no updating attributes given", error.message)
         end
       end
 
@@ -255,7 +273,8 @@ module ActiveRecord
         end
 
         it "raises a exception" do
-          assert_raises(::ArgumentError, "all filtering Hashes must have the same keys") { update_by_hash }
+          error = assert_raises(::ArgumentError) { update_by_hash }
+          assert_equal("all filtering Hashes must have the same keys", error.message)
         end
       end
 
@@ -268,7 +287,8 @@ module ActiveRecord
         end
 
         it "raises a exception" do
-          assert_raises(::ArgumentError, "all updating Hashes must have the same keys") { update_by_hash }
+          error = assert_raises(::ArgumentError) { update_by_hash }
+          assert_equal("all updating Hashes must have the same keys", error.message)
         end
       end
 
@@ -276,10 +296,8 @@ module ActiveRecord
         before { @updates = { { names: "first" } => { name: "new" } } }
 
         it "raises a exception" do
-          assert_raises(
-            ::ActiveModel::UnknownAttributeError,
-            "unknown attribute 'names' for FakeRecord::ActiveRecord_Relation."
-          ) { update_by_hash }
+          error = assert_raises(::ActiveModel::UnknownAttributeError) { update_by_hash }
+          assert_equal("unknown attribute 'names' for FakeRecord::ActiveRecord_Relation.", error.message)
         end
       end
 
@@ -287,10 +305,8 @@ module ActiveRecord
         before { @updates = { { name: "first" } => { names: "new" } } }
 
         it "raises a exception" do
-          assert_raises(
-            ::ActiveModel::UnknownAttributeError,
-            "unknown attribute 'names' for FakeRecord::ActiveRecord_Relation."
-          ) { update_by_hash }
+          error = assert_raises(::ActiveModel::UnknownAttributeError) { update_by_hash }
+          assert_equal("unknown attribute 'names' for FakeRecord::ActiveRecord_Relation.", error.message)
         end
       end
 
@@ -298,7 +314,8 @@ module ActiveRecord
         before { @updates = { name: "new" } }
 
         it "raises a exception" do
-          assert_raises(::TypeError, "expected {}, got name") { update_by_hash }
+          error = assert_raises(::TypeError, "expected {}, got name") { update_by_hash }
+          assert_equal("expected {}, got name", error.message)
         end
       end
 
@@ -306,7 +323,8 @@ module ActiveRecord
         before { @updates = Integer }
 
         it "raises a exception" do
-          assert_raises(::TypeError, "expected {}, got Integer") { update_by_hash }
+          error = assert_raises(::TypeError) { update_by_hash }
+          assert_equal("expected {}, got Integer", error.message)
         end
       end
     end
