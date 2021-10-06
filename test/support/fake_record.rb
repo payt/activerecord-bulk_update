@@ -17,6 +17,7 @@ ActiveRecord::Migration.create_table(:phony_records, id: false, force: true) do 
 end
 
 class FakeRecord < ActiveRecord::Base
+  validates :rank, numericality: { greater_than_or_equal_to: 1 }
 end
 
 class PhonyRecord < ActiveRecord::Base

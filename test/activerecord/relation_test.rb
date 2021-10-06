@@ -4,12 +4,66 @@ require "./test/test_helper"
 
 module ActiveRecord
   describe Relation do
+    before { @scope = FakeRecord.all }
+
+    describe ".bulk_update" do
+      def bulk_update
+        @scope.bulk_update(@records)
+      end
+
+      before do
+        @records = [fake_records(:first)]
+      end
+
+      it "returns true" do
+        assert_equal(true, bulk_update)
+      end
+
+      describe "when one of the records is invalid" do
+        before { fake_records(:first).rank = -1 }
+
+        it "returns false" do
+          assert_equal(false, bulk_update)
+        end
+
+        it "sets the error messages on the given objects" do
+          bulk_update
+          assert_equal(true, @records.first.errors.added?(:rank, :greater_than_or_equal_to, value: -1, count: 1))
+        end
+      end
+    end
+
+    describe ".bulk_update!" do
+      def bulk_update!
+        @scope.bulk_update!(@records)
+      end
+
+      before do
+        @records = [fake_records(:first)]
+      end
+
+      it "returns true" do
+        assert_equal(true, bulk_update!)
+      end
+
+      describe "when one of the records is invalid" do
+        before { fake_records(:first).rank = -1 }
+
+        it "raises an exception" do
+          assert_raises(ActiveRecord::RecordInvalid) { bulk_update! }
+        end
+
+        it "sets the error messages on the given objects" do
+          assert_raises(ActiveRecord::RecordInvalid) { bulk_update! }
+          assert_equal(true, @records.first.errors.added?(:rank, :greater_than_or_equal_to, value: -1, count: 1))
+        end
+      end
+    end
+
     describe ".bulk_update_all" do
       def bulk_update_all
         @scope.bulk_update_all({ active: true } => { active: false })
       end
-
-      before { @scope = FakeRecord.all }
 
       it "updates the records which match the filtering clause" do
         assert_equal(2, bulk_update_all)
