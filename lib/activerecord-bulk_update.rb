@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-module ActiveRecord
-end
-
 require "activerecord-bulk_update/activerecord/bulk_update"
 require "activerecord-bulk_update/activerecord/querying"
 require "activerecord-bulk_update/activerecord/relation"

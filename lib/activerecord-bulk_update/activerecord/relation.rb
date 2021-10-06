@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "active_record"
+
 module ActiveRecord
   class Relation
     # def bulk_update(updates)
