@@ -79,7 +79,7 @@ changes = {
   { country: "US", locale: "en" } => { currency: "USD", is_eu: false, locale: "en-US" }
 }
 
-User.bulk_update_columns(changes)
+User.bulk_update_all(changes)
 ```
 
 You can combine it with existing scopes:
