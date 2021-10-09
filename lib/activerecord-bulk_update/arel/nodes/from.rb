@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "arel"
-
 module Arel
   module Nodes
     # Adds a new type of Node that can be used when updating from a values_list

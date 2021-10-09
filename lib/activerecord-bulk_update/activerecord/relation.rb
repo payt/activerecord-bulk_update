@@ -1,9 +1,11 @@
 # frozen_string_literal: true
 
-require "active_record"
-
 module ActiveRecord
   class Relation
+    def bulk_insert(inserts)
+      BulkInsert.new(self, inserts).insert_records
+    end
+
     # def bulk_update(updates)
     # end
     #

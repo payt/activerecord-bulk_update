@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "active_record"
-
 module ActiveRecord
   # New class that builds the query to update multiple records in a single statement.
   class BulkUpdate
