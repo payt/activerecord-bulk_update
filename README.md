@@ -4,9 +4,11 @@ Updates multiple records with different values in a single database statement.
 
 ### TLDR;
 
-bulk_update_columns -> update_columns, but then for an Array of instances which are upated in a single query.
-bulk_update_all     -> update_all, but then for multiple update_all statements in a single query.
-bulk_insert         -> insert_all!, but then for an Array of instances instead of an Array of attributes.
+| Method  | Description |
+| ------------- | ------------- |
+| [bulk_update_columns](#bulk_update_columns) | update_columns, but then for an Array of instances which are upated in a single query. |
+| bulk_update_all | update_all, but then for multiple update_all statements in a single query. |
+| bulk_insert | insert_all!, but then for an Array of instances instead of an Array of attributes. |
 
 ### .bulk_update_columns
 
