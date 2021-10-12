@@ -44,6 +44,24 @@ module ActiveRecord
         end
       end
 
+      describe "when chained with an association" do
+        before do
+          @model = fake_records(:first).phony_records
+          @inserts = [PhonyRecord.new(name: "1ste"), PhonyRecord.new(name: "2nd")]
+        end
+
+        it "inserts the records throught the association" do
+          assert_change(-> { @model.count }, by: 2) { insert_records }
+        end
+
+        it "assigns the reference to the parent object" do
+          assert_change(
+            -> { @inserts.count { |record| record.fake_record_id == fake_records(:first).id } },
+            by: 2
+          ) { insert_records }
+        end
+      end
+
       #
       # Scenarios in which nothing happens
       #

@@ -16,7 +16,7 @@ module ActiveRecord
       return inserts if values.none?
 
       inserts.zip(execute).each do |insert, attrs|
-        insert.assign_attributes(model.where_values_hash.merge(attrs))
+        insert.assign_attributes(model.where_values_hash.merge(attrs || {}))
         insert.changes_applied
         insert.instance_variable_set(:@new_record, false)
         insert.instance_variable_set(:@previously_new_record, true)
