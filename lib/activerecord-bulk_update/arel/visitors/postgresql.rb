@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "arel"
-
 module Arel
   module Visitors
     class PostgreSQL
