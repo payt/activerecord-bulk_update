@@ -13,14 +13,18 @@ ActiveRecord::Migration.create_table(:fake_records, force: true) do |t|
   t.integer :rank
 end
 ActiveRecord::Migration.create_table(:phony_records, id: false, force: true) do |t|
+  t.references :fake_record
   t.string :name
 end
 
 class FakeRecord < ActiveRecord::Base
+  has_many :phony_records
+
   validates :rank, numericality: { greater_than_or_equal_to: 1 }
 end
 
 class PhonyRecord < ActiveRecord::Base
+  belongs_to :fake_record
 end
 
 class MiniTest::Test
