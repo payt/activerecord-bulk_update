@@ -3,12 +3,13 @@
 module ActiveRecord
   # New class that builds the query to update multiple records in a single statement.
   class BulkUpdate
-    attr_reader :model, :updates, :values, :filtering_attributes, :updating_attributes
+    attr_reader :model, :touch, :updates, :values, :filtering_attributes, :updating_attributes
 
     delegate :arel, :arel_table, :columns_hash, :primary_key, to: :model
 
-    def initialize(model, updates)
+    def initialize(model, updates, touch:)
       @model = model
+      @touch = touch
       @updates = updates
       @values = []
     end
@@ -17,6 +18,7 @@ module ActiveRecord
       extract_values_from_records
       return updates if values.none?
 
+      touch_all if touch
       execute
       updates.each(&:changes_applied)
     end
@@ -25,6 +27,7 @@ module ActiveRecord
       extract_values_from_hash
       return 0 if values.none?
 
+      touch_all if touch
       execute
     end
 
@@ -120,6 +123,12 @@ module ActiveRecord
             .zip(types)
             .map { |value, type| type.cast(value) }
         end
+      end
+
+      def touch_all
+        current_times = Array.new(model.timestamp_attributes_for_update_in_model.size) { model.current_time_from_proper_timezone }
+        values.each { |value| value.concat(current_times) }
+        @updating_attributes += model.timestamp_attributes_for_update_in_model
       end
   end
 end

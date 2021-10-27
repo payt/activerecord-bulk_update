@@ -8,10 +8,13 @@ module ActiveRecord
 
     describe "#update_records" do
       def update_records
-        BulkUpdate.new(@model, @updates).update_records
+        BulkUpdate.new(@model, @updates, touch: @touch).update_records
       end
 
-      before { @model = FakeRecord.all }
+      before do
+        @model = FakeRecord.all
+        @touch = true
+      end
 
       describe "when given activerecord instances with unpersisted changes" do
         before do
@@ -38,8 +41,20 @@ module ActiveRecord
           assert_change(-> { @updates.count(&:has_changes_to_save?) }, from: 3, to: 0) { update_records }
         end
 
+        it "touches the updated_at" do
+          assert_change(-> { fake_records(:first).reload.updated_at }) { update_records }
+        end
+
         it "returns the Array of records" do
           assert_equal(@updates, update_records)
+        end
+
+        describe "when setting touch to false" do
+          before { @touch = false }
+
+          it "does not touch the updated_at" do
+            refute_change(-> { fake_records(:first).reload.updated_at }) { update_records }
+          end
         end
       end
 
@@ -159,10 +174,13 @@ module ActiveRecord
 
     describe "#update_by_hash" do
       def update_by_hash
-        BulkUpdate.new(@model, @updates).update_by_hash
+        BulkUpdate.new(@model, @updates, touch: @touch).update_by_hash
       end
 
-      before { @model = FakeRecord.all }
+      before do
+        @model = FakeRecord.all
+        @touch = false
+      end
 
       describe "when given a Hash with multiple updates" do
         before do
@@ -187,6 +205,18 @@ module ActiveRecord
 
         it "returns the number of updated records" do
           assert_equal(3, update_by_hash)
+        end
+
+        it "does not touch the updated_at" do
+          refute_change(-> { fake_records(:first).reload.updated_at }) { update_by_hash }
+        end
+
+        describe "when setting touch to true" do
+          before { @touch = true }
+
+          it "touches the updated_at" do
+            assert_change(-> { fake_records(:first).reload.updated_at }) { update_by_hash }
+          end
         end
       end
 

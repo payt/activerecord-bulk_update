@@ -11,6 +11,7 @@ ActiveRecord::Migration.create_table(:fake_records, force: true) do |t|
   t.string :name
   t.boolean :active
   t.integer :rank
+  t.datetime :updated_at
 end
 ActiveRecord::Migration.create_table(:phony_records, id: false, force: true) do |t|
   t.references :fake_record
