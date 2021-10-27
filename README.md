@@ -14,7 +14,7 @@ Updates multiple records with different values in a single database statement.
 
 ### .bulk_update
 
-This method allows you directly update a set of records almost exactly as if you would have called `update` on each of those objects. The main difference with the regular update method is that the callbacks are not triggered on the instances, except for the 2 callbacks triggered by the validation process. So before_validation and after_validation are triggered, the others are not.
+This method allows you to update a set of records almost exactly as if you would have called `update` on each of those records. The main difference with the regular update method is that the callbacks are not triggered on the instances, except for the 2 callbacks triggered by the validation process. So before_validation and after_validation are triggered, the others are not.
 
 If any of the records is invalid then `false` is returned and the error messages are set on the invalid instances.
 
@@ -22,7 +22,7 @@ Just as the regular update method the `updated_at` is touched, if do not want th
 
 ### .bulk_update!
 
-This method allows you directly update a set of records almost exactly as if you would have called `update!` on each of those objects. The main difference with the regular update method is that the callbacks are not triggered on the instances, except for the 2 callbacks triggered by the validation process. So before_validation and after_validation are triggered, the others are not.
+This method allows you to update a set of records almost exactly as if you would have called `update!` on each of those records. The main difference with the regular update method is that the callbacks are not triggered on the instances, except for the 2 callbacks triggered by the validation process. So before_validation and after_validation are triggered, the others are not.
 
 If any of the records is invalid then `ActiveRecord::InvalidRecord` is raised and the error messages are set on the invalid instances.
 
@@ -30,7 +30,7 @@ Just as the regular update! method the `updated_at` is touched, if do not want t
 
 ### .bulk_update_columns
 
-This method allows you directly update a set of records exactly as if you would have called `update_columns` on each of those objects. The only difference is that all the updates are send to the database in a single statement. Wrapping the updates in a transaction is therefore not necessary.
+This method allows you to update a set of records exactly as if you would have called `update_columns` on each of those records. The only difference is that all the updates are send to the database in a single statement. Wrapping the updates in a transaction is therefore not necessary.
 
 Old way of updating multiple records of the same model:
  
