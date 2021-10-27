@@ -21,7 +21,7 @@ module ActiveRecord
     end
 
     def bulk_update_all(updates, touch: false)
-      BulkUpdate.new(self, updates, touch: false).update_by_hash
+      BulkUpdate.new(self, updates, touch: touch).update_by_hash
     end
 
     def bulk_update_columns(updates, touch: false)
