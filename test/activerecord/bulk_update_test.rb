@@ -8,10 +8,13 @@ module ActiveRecord
 
     describe "#update_records" do
       def update_records
-        BulkUpdate.new(@model, @updates).update_records
+        BulkUpdate.new(@model, @updates, touch: @touch).update_records
       end
 
-      before { @model = FakeRecord.all }
+      before do
+        @model = FakeRecord.all
+        @touch = true
+      end
 
       describe "when given activerecord instances with unpersisted changes" do
         before do
@@ -38,8 +41,20 @@ module ActiveRecord
           assert_change(-> { @updates.count(&:has_changes_to_save?) }, from: 3, to: 0) { update_records }
         end
 
+        it "touches the updated_at" do
+          assert_change(-> { fake_records(:first).reload.updated_at }) { update_records }
+        end
+
         it "returns the Array of records" do
           assert_equal(@updates, update_records)
+        end
+
+        describe "when setting touch to false" do
+          before { @touch = false }
+
+          it "does not touch the updated_at" do
+            refute_change(-> { fake_records(:first).reload.updated_at }) { update_records }
+          end
         end
       end
 
@@ -102,7 +117,7 @@ module ActiveRecord
       describe "when given a record from a different model" do
         before { @updates = [PhonyRecord.new] }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::TypeError) { update_records }
           assert_match(/\Aexpected #<FakeRecord:.+, got #<PhonyRecord:.+>\z/, error.message)
         end
@@ -114,7 +129,7 @@ module ActiveRecord
           @updates = [PhonyRecord.new]
         end
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::ActiveRecord::ActiveRecordError) { update_records }
           assert_equal("cannot bulk update a model without primary_key", error.message)
         end
@@ -123,7 +138,7 @@ module ActiveRecord
       describe "when given an unpersisted record" do
         before { @updates = [FakeRecord.new] }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::ActiveRecord::ActiveRecordError) { update_records }
           assert_equal("cannot update a new record", error.message)
         end
@@ -132,7 +147,7 @@ module ActiveRecord
       describe "when given an destroyed record" do
         before { @updates = [fake_records(:first).tap(&:destroy!)] }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::ActiveRecord::ActiveRecordError) { update_records }
           assert_equal("cannot update a destroyed record", error.message)
         end
@@ -141,7 +156,7 @@ module ActiveRecord
       describe "when given an Array of invalid datatypes" do
         before { @updates = [Integer] }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::TypeError) { update_records }
           assert_match(/\Aexpected #<FakeRecord:.+, got Integer\z/, error.message)
         end
@@ -150,7 +165,7 @@ module ActiveRecord
       describe "when given an invalid datatype" do
         before { @updates = Integer }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::TypeError) { update_records }
           assert_equal("expected [] or ActiveRecord::Relation, got Integer", error.message)
         end
@@ -159,10 +174,13 @@ module ActiveRecord
 
     describe "#update_by_hash" do
       def update_by_hash
-        BulkUpdate.new(@model, @updates).update_by_hash
+        BulkUpdate.new(@model, @updates, touch: @touch).update_by_hash
       end
 
-      before { @model = FakeRecord.all }
+      before do
+        @model = FakeRecord.all
+        @touch = false
+      end
 
       describe "when given a Hash with multiple updates" do
         before do
@@ -187,6 +205,18 @@ module ActiveRecord
 
         it "returns the number of updated records" do
           assert_equal(3, update_by_hash)
+        end
+
+        it "does not touch the updated_at" do
+          refute_change(-> { fake_records(:first).reload.updated_at }) { update_by_hash }
+        end
+
+        describe "when setting touch to true" do
+          before { @touch = true }
+
+          it "touches the updated_at" do
+            assert_change(-> { fake_records(:first).reload.updated_at }) { update_by_hash }
+          end
         end
       end
 
@@ -249,7 +279,7 @@ module ActiveRecord
       describe "when given an Hash without columns to select records by" do
         before { @updates = { {} => { name: "first" } } }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::ArgumentError) { update_by_hash }
           assert_equal("no filtering attributes given", error.message)
         end
@@ -258,7 +288,7 @@ module ActiveRecord
       describe "when given an Hash without columns to update" do
         before { @updates = { { name: "first" } => {} } }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::ArgumentError) { update_by_hash }
           assert_equal("no updating attributes given", error.message)
         end
@@ -272,7 +302,7 @@ module ActiveRecord
           }
         end
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::ArgumentError) { update_by_hash }
           assert_equal("all filtering Hashes must have the same keys", error.message)
         end
@@ -286,7 +316,7 @@ module ActiveRecord
           }
         end
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::ArgumentError) { update_by_hash }
           assert_equal("all updating Hashes must have the same keys", error.message)
         end
@@ -295,7 +325,7 @@ module ActiveRecord
       describe "when given a filtering column that does not exist" do
         before { @updates = { { names: "first" } => { name: "new" } } }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::ActiveModel::UnknownAttributeError) { update_by_hash }
           assert_equal("unknown attribute 'names' for FakeRecord::ActiveRecord_Relation.", error.message)
         end
@@ -304,7 +334,7 @@ module ActiveRecord
       describe "when given a updating column that does not exist" do
         before { @updates = { { name: "first" } => { names: "new" } } }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::ActiveModel::UnknownAttributeError) { update_by_hash }
           assert_equal("unknown attribute 'names' for FakeRecord::ActiveRecord_Relation.", error.message)
         end
@@ -313,7 +343,7 @@ module ActiveRecord
       describe "when given an Hash containing an invalid filter" do
         before { @updates = { name: "new" } }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::TypeError, "expected {}, got name") { update_by_hash }
           assert_equal("expected {}, got name", error.message)
         end
@@ -322,7 +352,7 @@ module ActiveRecord
       describe "when given an invalid datatype" do
         before { @updates = Integer }
 
-        it "raises a exception" do
+        it "raises an exception" do
           error = assert_raises(::TypeError) { update_by_hash }
           assert_equal("expected {}, got Integer", error.message)
         end

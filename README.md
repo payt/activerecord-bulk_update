@@ -6,13 +6,31 @@ Updates multiple records with different values in a single database statement.
 
 | Method  | Description |
 | ------------- | ------------- |
+| [bulk_update](#bulk_update) | `update`, but then for an Array of instances which are updated in a single query. NOTE: does not trigger callbacks |
+| [bulk_update!](#bulk_update!) | `update!`, but then for an Array of instances which are updated in a single query. NOTE: does not trigger callbacks |
 | [bulk_update_columns](#bulk_update_columns) | `update_columns`, but then for an Array of instances which are updated in a single query. |
 | [bulk_update_all](#bulk_update_all) | `update_all`, but then for multiple update_all statements in a single query. |
 | [bulk_insert](#bulk_insert) | `insert_all!`, but then for an Array of instances instead of an Array of attributes. |
 
+### .bulk_update
+
+This method allows you to update a set of records almost exactly as if you would have called `update` on each of those records. The main difference with the regular update method is that the callbacks are not triggered on the instances, except for the 2 callbacks triggered by the validation process. So before_validation and after_validation are triggered, the others are not.
+
+If any of the records is invalid then `false` is returned and the error messages are set on the invalid instances.
+
+Just as the regular update method the `updated_at` is touched, if do not want this you can pass `touch: false`.
+
+### .bulk_update!
+
+This method allows you to update a set of records almost exactly as if you would have called `update!` on each of those records. The main difference with the regular update method is that the callbacks are not triggered on the instances, except for the 2 callbacks triggered by the validation process. So before_validation and after_validation are triggered, the others are not.
+
+If any of the records is invalid then `ActiveRecord::InvalidRecord` is raised and the error messages are set on the invalid instances.
+
+Just as the regular update! method the `updated_at` is touched, if do not want this you can pass `touch: false`.
+
 ### .bulk_update_columns
 
-This method allows you directly update a set of records exactly as if you would have called `update_columns` on each of those objects. The only difference is that all the updates are send to the database in a single statement. Wrapping the updates in a transaction is therefore not necessary.
+This method allows you to update a set of records exactly as if you would have called `update_columns` on each of those records. The only difference is that all the updates are send to the database in a single statement. Wrapping the updates in a transaction is therefore not necessary.
 
 Old way of updating multiple records of the same model:
  
@@ -52,6 +70,8 @@ You can combine it with existing scopes:
 ```ruby
 User.where(active: true).limit(2).bulk_update_columns([user1, user2])
 ```
+
+Just as the regular update_columns method the `updated_at` is not touched, if do want this you can pass `touch: true`.
 
 ### .bulk_update_all
 
@@ -95,6 +115,8 @@ You can combine it with existing scopes:
 ```ruby
 User.where(active: true).limit(2).bulk_update_all(changes)
 ```
+
+Just as the regular update_all method the `updated_at` is not touched, if do want this you can pass `touch: true`.
 
 ### .bulk_insert
 
@@ -151,9 +173,10 @@ The code in this gem mirrors very closely the code used by methods like `update_
 ### TODO
 - Add CI build for tests and linting!
 - Auto-deploy to rubygems!
-- Add the option to validate records prior to updating?
-- Add the option to execute callbacks?
-- Add the option to update the updated_at column?
+- Add bulk_create and bulk_create!?
+- Add bulk_save and bulk_save!?
+- Add the option to execute callbacks? Complex to implement and `around` callbacks are basically impossible.
+- Add the option to set the created_at column during bulk_insert?
 - Add the ability to update in_batches?
 - Add optimistic locking?
 - Improve performance when including a limit, order or offset clause
