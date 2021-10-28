@@ -16,9 +16,17 @@ module ActiveRecord
       end
 
       describe "when a regular where clause is added" do
-        before { @scope = FakeRecord.where(name: "first") }
+        before { @scope = FakeRecord.where(active: true) }
 
         it "updates only the records which match all filtering clauses" do
+          assert_equal(2, bulk_update_all)
+        end
+      end
+
+      describe "when updating through an association" do
+        before { @scope = fake_records(:first).phony_records }
+
+        it "updates only the records found through the association" do
           assert_equal(1, bulk_update_all)
         end
       end

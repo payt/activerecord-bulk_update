@@ -6,9 +6,31 @@ Updates multiple records with different values in a single database statement.
 
 | Method  | Description |
 | ------------- | ------------- |
+| [bulk_create](#bulk_create) | `create`, but then for an Array of instances which are created in a single query. |
+| [bulk_create!](#bulk_create!) | `create!`, but then for an Array of instances which are created in a single query. |
 | [bulk_update_columns](#bulk_update_columns) | `update_columns`, but then for an Array of instances which are updated in a single query. |
 | [bulk_update_all](#bulk_update_all) | `update_all`, but then for multiple update_all statements in a single query. |
 | [bulk_insert](#bulk_insert) | `insert_all!`, but then for an Array of instances instead of an Array of attributes. |
+
+### .bulk_create
+
+This method allows you to create a set of records almost exactly as if you would have called `create` on each of those records. The main difference with the regular update method is that the callbacks are not triggered on the instances, except for the 2 callbacks triggered by the validation process. So before_validation and after_validation are triggered, the others are not.
+
+- If any of the records is invalid then `false` is returned and the error messages are set on the invalid instances.
+- Just as the regular create method the `created_at` and `updated_at` attributes are touched, if do not want this you can pass `touch: false`.
+- If you want to skip validation just pass `validate: false`.
+- By default it will raise if any already persisted records are given, to suppress this error pass `ignore_persisted: true`.
+- bulk_create is a simple wrapper around [bulk_insert](#bulk_insert), check there for more details.
+
+### .bulk_create!
+
+This method allows you to create a set of records almost exactly as if you would have called `create!` on each of those records. The main difference with the regular update method is that the callbacks are not triggered on the instances, except for the 2 callbacks triggered by the validation process. So before_validation and after_validation are triggered, the others are not.
+
+- If any of the records is invalid then `ActiveRecord::InvalidRecord` is raised and the error messages are set on the invalid instances.
+- Just as the regular create method the `created_at` and `updated_at` attributes are touched, if do not want this you can pass `touch: false`.
+- If you want to skip validation just pass `validate: false`.
+- By default it will raise if any already persisted records are given, to suppress this error pass `ignore_persisted: true`.
+- bulk_create! is a simple wrapper around [bulk_insert](#bulk_insert), check there for more details.
 
 ### .bulk_update_columns
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module ActiveRecord
-  # New class that builds the query to update multiple records in a single statement.
+  # Builds the query to update multiple records in a single statement.
   class BulkUpdate
     attr_reader :model, :updates, :values, :filtering_attributes, :updating_attributes
 

@@ -1,16 +1,14 @@
 first:
-  id: 1
   name: first
   active: true
-  rank: 1
+  fake_record_id: 1
 
 second:
-  id: 2
   name: second
   active: true
-  rank: 2
+  fake_record_id: 2
 
 third:
   name: third
   active: false
-  rank: 3
+  fake_record_id: 1
