@@ -18,7 +18,7 @@ This method allows you to update a set of records almost exactly as if you would
 
 If any of the records is invalid then `false` is returned and the error messages are set on the invalid instances.
 
-Just as the regular update method the `updated_at` is touched, if do not want this you can pas `touch: false`.
+Just as the regular update method the `updated_at` is touched, if do not want this you can pass `touch: false`.
 
 ### .bulk_update!
 
@@ -26,7 +26,7 @@ This method allows you to update a set of records almost exactly as if you would
 
 If any of the records is invalid then `ActiveRecord::InvalidRecord` is raised and the error messages are set on the invalid instances.
 
-Just as the regular update! method the `updated_at` is touched, if do not want this you can pas `touch: false`.
+Just as the regular update! method the `updated_at` is touched, if do not want this you can pass `touch: false`.
 
 ### .bulk_update_columns
 
@@ -71,7 +71,7 @@ You can combine it with existing scopes:
 User.where(active: true).limit(2).bulk_update_columns([user1, user2])
 ```
 
-Just as the regular update_columns method the `updated_at` is not touched, if do want this you can pas `touch: true`.
+Just as the regular update_columns method the `updated_at` is not touched, if do want this you can pass `touch: true`.
 
 ### .bulk_update_all
 
@@ -116,7 +116,7 @@ You can combine it with existing scopes:
 User.where(active: true).limit(2).bulk_update_all(changes)
 ```
 
-Just as the regular update_all method the `updated_at` is not touched, if do want this you can pas `touch: true`.
+Just as the regular update_all method the `updated_at` is not touched, if do want this you can pass `touch: true`.
 
 ### .bulk_insert
 
