@@ -8,12 +8,14 @@ module ActiveRecord
 
     describe "#insert_records" do
       def insert_records
-        BulkInsert.new(@model, @inserts).insert_records
+        BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted, touch: @touch).insert_records
       end
 
       before do
         @model = FakeRecord.all
         @inserts = [FakeRecord.new(name: "1ste"), FakeRecord.new(name: "2nd")]
+        @ignore_persisted = false
+        @touch = false
       end
 
       it "inserts the records" do
