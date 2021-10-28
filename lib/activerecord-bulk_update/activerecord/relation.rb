@@ -6,14 +6,14 @@ module ActiveRecord
       BulkInsert.new(self, inserts).insert_records
     end
 
-    def bulk_update(updates, touch: true)
-      bulk_update!(updates, touch: touch)
+    def bulk_update(*args)
+      bulk_update!(*args)
     rescue ActiveRecord::RecordInvalid
       false
     end
 
-    def bulk_update!(updates, touch: true)
-      raise ActiveRecord::RecordInvalid if updates.map(&:valid?).any?(false)
+    def bulk_update!(updates, touch: true, validate: true)
+      raise ActiveRecord::RecordInvalid if validate && updates.map(&:valid?).any?(false)
 
       BulkUpdate.new(self, updates, touch: touch).update_records
 

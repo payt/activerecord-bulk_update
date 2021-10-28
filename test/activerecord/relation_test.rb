@@ -8,11 +8,12 @@ module ActiveRecord
 
     describe ".bulk_update" do
       def bulk_update
-        @scope.bulk_update(@records)
+        @scope.bulk_update(@records, **@options)
       end
 
       before do
-        @records = [fake_records(:first)]
+        @records = [fake_records(:first), fake_records(:second)]
+        @options = {}
       end
 
       it "returns true" do
@@ -20,26 +21,37 @@ module ActiveRecord
       end
 
       describe "when one of the records is invalid" do
-        before { fake_records(:first).rank = -1 }
+        before { @records.first.rank = -1 }
 
         it "returns false" do
           assert_equal(false, bulk_update)
         end
 
-        it "sets the error messages on the given objects" do
-          bulk_update
-          assert_equal(true, @records.first.errors.added?(:rank, :greater_than_or_equal_to, value: -1, count: 1))
+        it "sets the error message on the invalid record" do
+          assert_change(
+            -> { @records.first.errors.added?(:rank, :greater_than_or_equal_to, value: -1, count: 1) },
+            to: true
+          ) { bulk_update }
+        end
+
+        describe "with validation disabled" do
+          before { @options[:validate] = false }
+
+          it "returns true" do
+            assert_equal(true, bulk_update)
+          end
         end
       end
     end
 
     describe ".bulk_update!" do
       def bulk_update!
-        @scope.bulk_update!(@records)
+        @scope.bulk_update!(@records, **@options)
       end
 
       before do
-        @records = [fake_records(:first)]
+        @records = [fake_records(:first), fake_records(:second)]
+        @options = {}
       end
 
       it "returns true" do
@@ -49,13 +61,19 @@ module ActiveRecord
       describe "when one of the records is invalid" do
         before { fake_records(:first).rank = -1 }
 
-        it "raises an exception" do
-          assert_raises(ActiveRecord::RecordInvalid) { bulk_update! }
+        it "sets the error message on the invalid record and raises an exception" do
+          assert_change(
+            -> { @records.first.errors.added?(:rank, :greater_than_or_equal_to, value: -1, count: 1) },
+            to: true
+          ) { assert_raises(ActiveRecord::RecordInvalid) { bulk_update! } }
         end
 
-        it "sets the error messages on the given objects" do
-          assert_raises(ActiveRecord::RecordInvalid) { bulk_update! }
-          assert_equal(true, @records.first.errors.added?(:rank, :greater_than_or_equal_to, value: -1, count: 1))
+        describe "with validation disabled" do
+          before { @options[:validate] = false }
+
+          it "returns true" do
+            assert_equal(true, bulk_update!)
+          end
         end
       end
     end
