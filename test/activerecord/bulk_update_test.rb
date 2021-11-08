@@ -72,8 +72,14 @@ module ActiveRecord
       describe "when setting a value with a different datatype" do
         # Test with at least 2 records since the values of the first will be explicitly casted.
         before do
-          first = FakeRecord.find_by!(name: "first").tap { |record| record.name = 1234 }
-          second = FakeRecord.find_by!(name: "second").tap { |record| record.name = 5678 }
+          first = FakeRecord.find_by!(name: "first").tap do |record|
+            record.name = 1234
+            record.details = { "asdf" => 3 }
+          end
+          second = FakeRecord.find_by!(name: "second").tap do |record|
+            record.name = 5678
+            record.details = [{ "asdf" => [{ "nested" => 3 }] }]
+          end
           @updates = [first, second]
         end
 
