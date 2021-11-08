@@ -5,7 +5,7 @@ module ActiveRecord
   class BulkUpdate
     attr_reader :model, :touch, :updates, :values, :filtering_attributes, :updating_attributes
 
-    delegate :arel, :arel_table, :columns_hash, :primary_key, to: :model
+    delegate :arel, :arel_table, :columns_hash, :predicate_builder, :primary_key, to: :model
 
     def initialize(model, updates, touch:)
       @model = model
@@ -89,7 +89,10 @@ module ActiveRecord
         end.uniq
 
         updates.each do |record|
-          changes = record.values_at(*updating_attributes)
+          changes = record.attributes.slice(*updating_attributes).map do |name, value|
+            # Using the predicate_builder allows for more complex datatypes like jsonb to be casted correctly.
+            predicate_builder.build_bind_attribute(arel_table[name].name, value).value.value_for_database
+          end
           next if changes.none?
 
           # Taking the current value of the id allows for the updating of the primary_key.

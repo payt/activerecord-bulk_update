@@ -12,6 +12,7 @@ ActiveRecord::Migration.create_table(:fake_records, force: true) do |t|
   t.string :name
   t.boolean :active
   t.integer :rank
+  t.jsonb :details
 
   t.timestamps null: true
 end
