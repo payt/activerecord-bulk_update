@@ -129,9 +129,10 @@ module ActiveRecord
       end
 
       def touch_all
-        current_times = Array.new(model.timestamp_attributes_for_update_in_model.size) { model.current_time_from_proper_timezone }
+        timestamps_to_add = model.timestamp_attributes_for_update_in_model - @updating_attributes.map(&:to_s)
+        current_times = Array.new(timestamps_to_add.size) { model.current_time_from_proper_timezone }
         values.each { |value| value.concat(current_times) }
-        @updating_attributes += model.timestamp_attributes_for_update_in_model
+        @updating_attributes += timestamps_to_add
       end
   end
 end

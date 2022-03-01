@@ -56,6 +56,19 @@ module ActiveRecord
             refute_change(-> { fake_records(:first).reload.updated_at }) { update_records }
           end
         end
+
+        describe "when the updated_at is already part of the changes on one of the records" do
+          before do
+            @updated_at = 30.seconds.ago.utc.round(6)
+            first = FakeRecord.find_by!(name: "first").tap { |record| record.updated_at = @updated_at }
+
+            @updates = [first, fake_records(:second)]
+          end
+
+          it "sets the updated_at to the explicitly given value" do
+            assert_change(-> { fake_records(:first).reload.updated_at }, to: @updated_at) { update_records }
+          end
+        end
       end
 
       describe "when updating the primary key" do
