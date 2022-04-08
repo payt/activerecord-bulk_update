@@ -46,9 +46,19 @@ module ActiveRecord
         stmt.offset(arel.offset)
         stmt.order(*arel.orders)
         stmt.wheres = arel.constraints
-        filtering_attributes.each { |attr| arel.where(arel_table[attr].eq(source[attr])) }
-        stmt.set(updating_attributes.map { |attr| [arel_table[attr], source["_#{attr}"]] })
-        stmt.ast.from = from
+
+        if values.uniq.one?
+          any_row = values[0]
+          filtering_attributes.each do |attr|
+            arel.where(arel_table[attr].eq(predicate_builder.build_bind_attribute(arel_table[attr].name, any_row.shift)))
+          end
+          stmt.set model.send(:_substitute_values, updating_attributes.zip(any_row).to_h)
+        else
+          filtering_attributes.each { |attr| arel.where(arel_table[attr].eq(source[attr])) }
+          stmt.set(updating_attributes.map { |attr| [arel_table[attr], source["_#{attr}"]] })
+          stmt.ast.from = from
+        end
+
         stmt
       end
 
@@ -64,15 +74,16 @@ module ActiveRecord
         )
       end
 
+      # @return [ValuesList]
+      #
+      # The first row is special since Postgresql will determine the datatype based on this row. To prevent PG from
+      # making an incorrect assumption about the datatypes they are explicilty set on the values of the first row.
       def values_list
-        values[0] = (filtering_attributes + updating_attributes).zip(values[0]).map do |attr, value|
-          column = columns_hash[arel_table[attr].name]
-          raise ActiveModel::UnknownAttributeError.new(model, attr) unless column
-
-          Arel::Nodes::Cast.new(value, column.sql_type).to_arel_sql
-        end
-
-        Arel::Nodes::ValuesList.new(values)
+        Arel::Nodes::ValuesList.new(values[1..].unshift(
+          (filtering_attributes + updating_attributes).zip(values[0]).map do |attr, value|
+            Arel::Nodes::Cast.new(value, columns_hash[arel_table[attr].name].sql_type).to_arel_sql
+          end
+        ))
       end
 
       def extract_values_from_records
@@ -114,7 +125,11 @@ module ActiveRecord
           [filter.keys, update.keys]
         end
 
-        types = (filtering_attributes + updating_attributes).map { |attr| model.type_for_attribute(attr) }
+        types = (filtering_attributes + updating_attributes).map do |attr|
+          raise ActiveModel::UnknownAttributeError.new(model, attr) unless columns_hash[arel_table[attr].name]
+
+          model.type_for_attribute(attr)
+        end
 
         updates.each do |filter, update|
           raise ArgumentError, "all filtering Hashes must have the same keys" if filter.keys != filtering_attributes
