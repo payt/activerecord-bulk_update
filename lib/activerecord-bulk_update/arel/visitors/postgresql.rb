@@ -23,9 +23,15 @@ module Arel
         collector << ")"
       end
 
+      # New method to cast the Returning node to a partial sql statement.
+      def visit_Arel_Nodes_Returning(o, collector)
+        collector << "RETURNING "
+        collect_nodes_for o.expr, collector, "", ", "
+      end
+
       # MONKEYPATCH
       #
-      # In order to be able to include the optional FROM statement the existing method needs to be overriden.
+      # In order to be able to include the optionals FROM and RETURNING statements the existing method needs to be overriden.
       def visit_Arel_Nodes_UpdateStatement(o, collector)
         o = prepare_update_statement(o)
 
@@ -36,6 +42,7 @@ module Arel
         collect_nodes_for o.wheres, collector, " WHERE ", " AND "
         collect_nodes_for o.orders, collector, " ORDER BY "
         maybe_visit o.limit, collector
+        maybe_visit o.returning, collector # MONKEYPATCH
       end
     end
   end

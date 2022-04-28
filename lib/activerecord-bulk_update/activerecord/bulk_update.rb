@@ -19,8 +19,19 @@ module ActiveRecord
       return updates if values.none?
 
       touch_all if touch
-      execute
-      updates.each(&:changes_applied)
+
+      sql, binds = model.connection.send(:to_sql_and_binds, update_manager)
+      result = model.connection.exec_query(sql, "Bulk Update", binds).tap { model.reset }
+      updated_ids = result.rows.flatten(1)
+
+      updates.each do |update|
+        if updated_ids.include?(update.id)
+          update.changes_applied
+        else
+          update.changes.each { |attr, changes| update[attr] = changes.first }
+          update.clear_changes_information
+        end
+      end
     end
 
     def update_by_hash
@@ -28,14 +39,10 @@ module ActiveRecord
       return 0 if values.none?
 
       touch_all if touch
-      execute
+      model.connection.update(update_manager, "Bulk Update").tap { model.reset }
     end
 
     private
-      def execute
-        model.connection.update(update_manager, "Bulk Update").tap { model.reset }
-      end
-
       def update_manager
         arel.source.left = arel_table
 
@@ -46,6 +53,7 @@ module ActiveRecord
         stmt.offset(arel.offset)
         stmt.order(*arel.orders)
         stmt.wheres = arel.constraints
+        stmt.returning(returning)
 
         if values.uniq.one?
           any_row = values[0]
@@ -56,7 +64,7 @@ module ActiveRecord
         else
           filtering_attributes.each { |attr| arel.where(arel_table[attr].eq(source[attr])) }
           stmt.set(updating_attributes.map { |attr| [arel_table[attr], source["_#{attr}"]] })
-          stmt.ast.from = from
+          stmt.from(from)
         end
 
         stmt
@@ -64,6 +72,12 @@ module ActiveRecord
 
       def source
         @source ||= Arel::Table.new("source")
+      end
+
+      def returning
+        return [] unless primary_key
+
+        Arel::Nodes::Returning.new([arel_table[primary_key]])
       end
 
       def from

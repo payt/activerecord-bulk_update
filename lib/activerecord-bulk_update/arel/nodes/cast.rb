@@ -2,7 +2,7 @@
 
 module Arel
   module Nodes
-    # Adds a new type of Node that can be used when updating from a values_list
+    # Adds a new type of Node that can be used to cast a value to a given datatype.
     #
     # @example CAST('value' AS datatype)
     class Cast < Node
