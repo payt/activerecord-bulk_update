@@ -37,8 +37,12 @@ module ActiveRecord
           assert_change(-> { FakeRecord.find_by!(name: "third").rank }, from: 3, to: 4) { update_records }
         end
 
-        it "marks all changes as persisted" do
+        it "marks all changes as handled" do
           assert_change(-> { @updates.count(&:has_changes_to_save?) }, from: 3, to: 0) { update_records }
+        end
+
+        it "marks all changes as previously saved" do
+          assert_change(-> { @updates.count { |update| update.previous_changes.any? } }, from: 0, to: 3) { update_records }
         end
 
         it "touches the updated_at" do
@@ -118,6 +122,25 @@ module ActiveRecord
 
         it "returns the Array" do
           assert_equal(@updates, update_records)
+        end
+      end
+
+      describe "when a filter in the query prevents the updates" do
+        before do
+          @updates = [fake_records(:first).tap { |record| record.rank = 9 }]
+          @model = FakeRecord.where(rank: 13)
+        end
+
+        it "resets the unpersisted attribute to the previous value" do
+          assert_change(-> { @updates.first.rank }, from: 9, to: 1) { update_records }
+        end
+
+        it "removes all pending changes" do
+          assert_change(-> { @updates.count(&:has_changes_to_save?) }, from: 1, to: 0) { update_records }
+        end
+
+        it "does not mark the changes as previously saved" do
+          refute_change(-> { @updates.count { |u| u.previous_changes.any? } }, from: 0) { update_records }
         end
       end
 
