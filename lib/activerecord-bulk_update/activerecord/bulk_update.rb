@@ -52,7 +52,7 @@ module ActiveRecord
           filtering_attributes.each do |attr|
             arel.where(arel_table[attr].eq(predicate_builder.build_bind_attribute(arel_table[attr].name, any_row.shift)))
           end
-          stmt.set model.send(:_substitute_values, updating_attributes.zip(any_row).to_h)
+          stmt.set(updating_attributes.zip(any_row).map { |attr, value| [arel_table[attr], value] })
         else
           filtering_attributes.each { |attr| arel.where(arel_table[attr].eq(source[attr])) }
           stmt.set(updating_attributes.map { |attr| [arel_table[attr], source["_#{attr}"]] })
