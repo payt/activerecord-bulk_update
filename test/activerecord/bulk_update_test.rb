@@ -73,12 +73,21 @@ module ActiveRecord
 
       describe "when updating the primary key" do
         before do
-          first = fake_records(:first).tap { |record| record.id = 0 }
-          @updates = [first]
+          @updates = [fake_records(:first).tap { |record| record.id = 0 }]
         end
 
         it "updates the primary key of the record" do
           assert_change(-> { FakeRecord.find_by!(name: "first").id }, to: 0) { update_records }
+        end
+      end
+
+      describe "when updating a value to nil" do
+        before do
+          @updates = [fake_records(:first).tap { |record| record.rank = nil }]
+        end
+
+        it "clears the value in the database" do
+          assert_change(-> { FakeRecord.find_by!(name: "first").rank }, to: nil) { update_records }
         end
       end
 

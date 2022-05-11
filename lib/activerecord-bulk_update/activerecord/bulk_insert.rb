@@ -15,7 +15,7 @@ module ActiveRecord
 
     def insert_records
       extract_values_from_records
-      return inserts if values.none?
+      return inserts if values.empty?
 
       touch_all if touch
 
@@ -57,7 +57,7 @@ module ActiveRecord
 
         inserts.each do |record|
           changes = record.slice(*inserting_attributes)
-          next if changes.none?
+          next if changes.empty?
           next if ignore_persisted && record.persisted?
 
           values << changes
