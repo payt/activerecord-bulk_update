@@ -42,6 +42,10 @@ module ActiveRecord
         end
 
         it "touches the updated_at" do
+          assert_change(-> { @updates.first.updated_at }) { update_records }
+        end
+
+        it "touches the updated_at column in the database" do
           assert_change(-> { fake_records(:first).reload.updated_at }) { update_records }
         end
 
