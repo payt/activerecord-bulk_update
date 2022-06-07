@@ -18,7 +18,11 @@ module ActiveRecord
       extract_values_from_records
       return updates if values.empty?
 
-      touch_all if touch
+      if touch && timestamps_to_touch.any?
+        touch_all
+        updates.each { |record| record.assign_attributes(timestamps_to_touch)  }
+      end
+
       execute
       updates.each(&:changes_applied)
     end
@@ -27,7 +31,7 @@ module ActiveRecord
       extract_values_from_hash
       return 0 if values.empty?
 
-      touch_all if touch
+      touch_all if touch && timestamps_to_touch.any?
       execute
     end
 
@@ -144,10 +148,14 @@ module ActiveRecord
       end
 
       def touch_all
-        timestamps_to_add = model.timestamp_attributes_for_update_in_model - @updating_attributes.map(&:to_s)
-        current_times = Array.new(timestamps_to_add.size) { model.current_time_from_proper_timezone }
-        values.each { |value| value.concat(current_times) }
-        @updating_attributes += timestamps_to_add
+        values.each { |value| value.concat(timestamps_to_touch.values) }
+        @updating_attributes += timestamps_to_touch.keys
+      end
+
+      def timestamps_to_touch
+        @timestamps_to_touch ||=
+          (model.timestamp_attributes_for_update_in_model - @updating_attributes.map(&:to_s))
+          .index_with { model.current_time_from_proper_timezone }
       end
   end
 end
