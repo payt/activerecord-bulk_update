@@ -129,21 +129,15 @@ module ActiveRecord
           [filter.keys, update.keys]
         end
 
-        types = (filtering_attributes + updating_attributes).map do |attr|
-          raise ActiveModel::UnknownAttributeError.new(model, attr) unless columns_hash[arel_table[attr].name]
-
-          model.type_for_attribute(attr)
-        end
-
         updates.each do |filter, update|
           raise ArgumentError, "all filtering Hashes must have the same keys" if filter.keys != filtering_attributes
           raise ArgumentError, "all updating Hashes must have the same keys" if update.keys != updating_attributes
 
-          values <<
-            filter.values_at(*filtering_attributes)
-            .concat(update.values_at(*updating_attributes))
-            .zip(types)
-            .map { |value, type| type.cast(value) }
+          values << filter.to_a.concat(update.to_a).map do |type, value|
+            raise ActiveModel::UnknownAttributeError.new(model, type) unless columns_hash[arel_table[type].name]
+
+            predicate_builder.build_bind_attribute(arel_table[type].name, value).value.value_for_database
+          end
         end
       end
 
