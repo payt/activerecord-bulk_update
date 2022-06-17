@@ -118,6 +118,26 @@ module ActiveRecord
           assert_equal(0, bulk_update_all)
         end
       end
+
+      describe "when updating an Array field" do
+        def bulk_update_all
+          @scope.bulk_update_all({ active: true } => { list: [1, 2] })
+        end
+
+        it "updates the records which match the filtering clause" do
+          assert_equal(2, bulk_update_all)
+        end
+      end
+
+      describe "when updating an jsonb field" do
+        def bulk_update_all
+          @scope.bulk_update_all({ active: true } => { details: { things: [{ number: 1 }, { number: 2 }] } })
+        end
+
+        it "updates the records which match the filtering clause" do
+          assert_equal(2, bulk_update_all)
+        end
+      end
     end
   end
 end
