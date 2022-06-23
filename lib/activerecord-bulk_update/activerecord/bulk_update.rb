@@ -85,7 +85,7 @@ module ActiveRecord
       def values_list
         Arel::Nodes::ValuesList.new(values[1..].unshift(
           (filtering_attributes + updating_attributes).zip(values[0]).map do |attr, value|
-            Arel::Nodes::Cast.new(value, columns_hash[arel_table[attr].name].sql_type).to_arel_sql
+            Arel::Nodes::Cast.new(value, columns_hash[arel_table[attr].name].sql_type_metadata.sql_type).to_arel_sql
           end
         ))
       end
