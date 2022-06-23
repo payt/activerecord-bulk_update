@@ -127,6 +127,19 @@ module ActiveRecord
         it "updates the records which match the filtering clause" do
           assert_equal(2, bulk_update_all)
         end
+
+        describe "when updating multiple records" do
+          def bulk_update_all
+            @scope.bulk_update_all(
+              { active: true } => { list: [1, 2] },
+              { active: false } => { list: [1, 2, 3] }
+            )
+          end
+
+          it "updates the records which match the filtering clause" do
+            assert_equal(3, bulk_update_all)
+          end
+        end
       end
 
       describe "when updating an jsonb field" do
@@ -136,6 +149,19 @@ module ActiveRecord
 
         it "updates the records which match the filtering clause" do
           assert_equal(2, bulk_update_all)
+        end
+
+        describe "when updating multiple records" do
+          def bulk_update_all
+            @scope.bulk_update_all(
+              { active: true } => { details: { things: [{ number: 1 }, { number: 2 }] } },
+              { active: false } => { details: { things: [{ number: 1 }, { number: 2 }, { number: 3 }] } }
+            )
+          end
+
+          it "updates the records which match the filtering clause" do
+            assert_equal(3, bulk_update_all)
+          end
         end
       end
     end

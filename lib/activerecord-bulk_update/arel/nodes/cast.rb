@@ -23,7 +23,7 @@ module Arel
         # ActiveRecord schema. Just to be sure the value is matched against a strict regexp which matches on all
         # PostgreSQL datatypes (https://www.postgresql.org/docs/13/datatype.html)
         def build_unquoted(type)
-          raise ArgumentError, "'#{value}' is not allowed to remain unquoted" unless type.match?(/\A[A-z][\w,() ]+(\[\])?\z/)
+          raise ArgumentError, "'#{type}' is not allowed to remain unquoted" unless type.match?(/\A[A-z][\w,() ]+(\[\])?\z/)
 
           Arel.sql(type)
         end
