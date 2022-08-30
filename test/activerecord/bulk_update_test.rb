@@ -162,8 +162,8 @@ module ActiveRecord
         end
 
         it "raises an exception" do
-          error = assert_raises(::ActiveRecord::ActiveRecordError) { update_records }
-          assert_equal("cannot bulk update a model without primary_key", error.message)
+          error = assert_raises(::ActiveRecord::UnknownPrimaryKey) { update_records }
+          assert_match(/Unknown primary key for table phony_records in model #<PhonyRecord::ActiveRecord_Relation:0x.+>\./, error.message)
         end
       end
 

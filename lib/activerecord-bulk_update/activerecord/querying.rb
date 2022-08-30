@@ -6,6 +6,8 @@ module ActiveRecord
       :bulk_create,
       :bulk_create!,
       :bulk_insert,
+      :bulk_save,
+      :bulk_save!,
       :bulk_update,
       :bulk_update!,
       :bulk_update_all,

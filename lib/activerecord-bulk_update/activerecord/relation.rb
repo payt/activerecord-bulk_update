@@ -20,6 +20,18 @@ module ActiveRecord
       BulkInsert.new(self, inserts, ignore_persisted: ignore_persisted, touch: touch).insert_records
     end
 
+    def bulk_save(*args)
+      bulk_save!(*args)
+    rescue ActiveRecord::RecordInvalid
+      false
+    end
+
+    def bulk_save!(saves, touch: true, validate: true)
+      BulkSave.new(self, saves, touch: touch, validate: validate).save_records
+
+      true
+    end
+
     def bulk_update(*args)
       bulk_update!(*args)
     rescue ActiveRecord::RecordInvalid
