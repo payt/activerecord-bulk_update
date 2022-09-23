@@ -34,6 +34,14 @@ module ActiveRecord
         assert_equal(@inserts, insert_records)
       end
 
+      describe "when inserting a value for an enumerized column" do
+        before { @inserts = [FakeRecord.new(enumerized: :other)] }
+
+        it "inserts the records" do
+          assert_change(-> { FakeRecord.where(enumerized: 1).count }, by: 1) { insert_records }
+        end
+      end
+
       describe "when chained with a where values hash" do
         before { @model = FakeRecord.where(rank: 3) }
 

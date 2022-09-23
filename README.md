@@ -197,10 +197,14 @@ The code in this gem mirrors very closely the code used by methods like `update_
 ### TODO
 - Add CI build for tests and linting!
 - Auto-deploy to rubygems!
-- Add bulk_create and bulk_create!?
 - Add bulk_save and bulk_save!?
 - Add the option to execute callbacks? Complex to implement and `around` callbacks are basically impossible.
 - Add the option to set the created_at column during bulk_insert?
 - Add the ability to update in_batches?
 - Add optimistic locking?
 - Improve performance when including a limit, order or offset clause
+
+### Testing
+
+1. Create the test database: `CREATE DATABASE "activerecord-bulk_update_test";`
+2. Run the tests: `bundle exec rake`

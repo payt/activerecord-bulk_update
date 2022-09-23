@@ -14,6 +14,7 @@ ActiveRecord::Migration.create_table(:fake_records, force: true) do |t|
   t.integer :rank
   t.jsonb :details
   t.integer :list, array: true
+  t.integer :enumerized, default: 0, null: false
 
   t.timestamps null: true
 end
@@ -25,7 +26,13 @@ ActiveRecord::Migration.create_table(:phony_records, id: false, force: true) do 
 end
 
 class FakeRecord < ActiveRecord::Base
+  require "enumerize"
+
+  extend Enumerize
+
   has_many :phony_records
+
+  enumerize :enumerized, in: { some: 0, other: 1 }
 
   validates :rank, numericality: { greater_than_or_equal_to: 1 }, allow_nil: true
 end
