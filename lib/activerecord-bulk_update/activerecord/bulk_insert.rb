@@ -36,9 +36,6 @@ module ActiveRecord
 
       def inserting_attributes
         @inserting_attributes ||= inserts.flat_map do |record|
-          raise TypeError, "expected #{model.new}, got #{record}" unless record.is_a?(model.klass)
-          raise ActiveRecordError, "cannot insert a destroyed record" if record.destroyed?
-
           if record.persisted?
             next [] if ignore_persisted
             raise ActiveRecordError, "cannot insert a persisted record"
@@ -56,7 +53,10 @@ module ActiveRecord
         raise TypeError, "expected [] or ActiveRecord::Relation, got #{inserts}" unless inserts.is_a?(Array) || inserts.is_a?(Relation)
 
         inserts.each do |record|
-          changes = record.slice(*inserting_attributes)
+          raise TypeError, "expected #{model.new}, got #{record}" unless record.is_a?(model.klass)
+          raise ActiveRecordError, "cannot insert a destroyed record" if record.destroyed?
+
+          changes = record.attributes.slice(*inserting_attributes)
           next if changes.empty?
           next if ignore_persisted && record.persisted?
 
