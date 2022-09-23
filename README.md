@@ -203,3 +203,8 @@ The code in this gem mirrors very closely the code used by methods like `update_
 - Add the ability to update in_batches?
 - Add optimistic locking?
 - Improve performance when including a limit, order or offset clause
+
+### Testing
+
+1. Create the test database: `CREATE DATABASE "activerecord-bulk_update_test";`
+2. Run the tests: `bundle exec rake`
