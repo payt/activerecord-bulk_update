@@ -15,7 +15,7 @@ module ActiveRecord
 
     def delete_records
       extract_filters_from_records
-      return deletes if filters.empty?
+      return [] if filters.empty?
 
       execute
 

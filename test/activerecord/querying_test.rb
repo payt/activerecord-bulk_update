@@ -202,7 +202,7 @@ module ActiveRecord
         end
       end
 
-      describe "with different filters matching the a single record" do
+      describe "with different filters matching a single record" do
         before { @filters = [{ active: true, rank: 1 }, { id: 1 }] }
 
         it "deletes the one record" do
