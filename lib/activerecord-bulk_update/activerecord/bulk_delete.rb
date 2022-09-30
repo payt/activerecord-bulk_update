@@ -47,27 +47,17 @@ module ActiveRecord
         stmt.order(*arel.orders)
         stmt.wheres = arel.constraints
 
-        groupings = filters.map do |filter|
-          if filter.one?
-            predicate_builder.build(arel_table[filter.keys.first], filter.values.first)
-          else
-            Arel::Nodes::Grouping.new(Arel::Nodes::And.new(filter.map { |attr, values| predicate_builder.build(arel_table[attr], values) }))
-          end
-        end
-
-        if groupings.one?
-          stmt.where(groupings.first)
-        else
-          groupings.each_cons(2).map do |left, right|
-            stmt.where(Arel::Nodes::Or.new(left, right))
-          end
-        end
+        stmt.where filters
+          .map { |filter| filter.map { |attr, value| predicate_builder.build(arel_table[attr], value) }.reduce(&:and) }
+          .reduce(&:or)
 
         stmt
       end
 
       def extract_filters_from_records
         raise UnknownPrimaryKey, model unless primary_key
+
+        @deletes = [deletes] if deletes.is_a?(model.klass)
         raise TypeError, "expected [] or ActiveRecord::Relation, got #{deletes}" unless deletes.is_a?(Array) || deletes.is_a?(Relation)
 
         ids = deletes.map do |record|
@@ -80,13 +70,9 @@ module ActiveRecord
       end
 
       def extract_filters_from_array
-        raise TypeError, "expected [], got #{deletes}" unless deletes.is_a?(Array)
+        @filters = Array.wrap(deletes).reject(&:blank?)
 
-        @filters = deletes.reject(&:blank?)
-      end
-
-      def returning_attributes
-        @returning_attributes ||= model.columns.select(&:default_function).map(&:name) - inserting_attributes
+        raise TypeError, "expected [{}], got #{deletes}" unless filters.all?(Hash)
       end
   end
 end

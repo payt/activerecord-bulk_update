@@ -147,8 +147,16 @@ module ActiveRecord
         end
       end
 
-      describe "when passing an incorrect type" do
+      describe "when passing a single instance" do
         before { @records = fake_records(:first) }
+
+        it "deletes the record" do
+          assert_change(-> { @model.count }, by: -1) { bulk_delete }
+        end
+      end
+
+      describe "when passing an incorrect type" do
+        before { @records = 1 }
 
         it "delets nothing and raises an error" do
           refute_change(-> { @model.count }) { assert_raises(TypeError) { bulk_delete } }
@@ -179,10 +187,18 @@ module ActiveRecord
       end
 
       describe "with different filters matching different records" do
-        before { @filters = [{ active: true, rank: 1 }, { active: false, name: "third", rank: 3 }, { id: 2 }] }
+        before { @filters = [{ active: [nil, true], rank: 1 }, { active: false, name: "third", rank: [3, 4] }, { id: 2 }] }
 
         it "deletes all records which match any of the filtering statements" do
           assert_equal(3, bulk_delete_all)
+        end
+
+        describe "with an additional global filter" do
+          before { @model = @model.where(active: true) }
+
+          it "deletes only the records matching the global filter plus any of the filtering statements" do
+            assert_equal(2, bulk_delete_all)
+          end
         end
       end
 
@@ -202,8 +218,16 @@ module ActiveRecord
         end
       end
 
+      describe "when passing an single filter" do
+        before { @filters = { active: true, rank: 1 } }
+
+        it "deletes the one record" do
+          assert_equal(1, bulk_delete_all)
+        end
+      end
+
       describe "when passing an incorrect type" do
-        before { @filters = { active: false, rank: 1 } }
+        before { @filters = 1 }
 
         it "delets nothing and raises an error" do
           refute_change(-> { @model.count }) { assert_raises(TypeError) { bulk_delete_all } }
