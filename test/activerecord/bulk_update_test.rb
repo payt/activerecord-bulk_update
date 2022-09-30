@@ -162,8 +162,7 @@ module ActiveRecord
         end
 
         it "raises an exception" do
-          error = assert_raises(::ActiveRecord::ActiveRecordError) { update_records }
-          assert_equal("cannot bulk update a model without primary_key", error.message)
+          assert_raises(ActiveRecord::UnknownPrimaryKey) { update_records }
         end
       end
 
@@ -171,7 +170,7 @@ module ActiveRecord
         before { @updates = [FakeRecord.new] }
 
         it "raises an exception" do
-          error = assert_raises(::ActiveRecord::ActiveRecordError) { update_records }
+          error = assert_raises(ActiveRecord::ActiveRecordError) { update_records }
           assert_equal("cannot update a new record", error.message)
         end
       end
@@ -180,7 +179,7 @@ module ActiveRecord
         before { @updates = [fake_records(:first).tap(&:destroy!)] }
 
         it "raises an exception" do
-          error = assert_raises(::ActiveRecord::ActiveRecordError) { update_records }
+          error = assert_raises(ActiveRecord::ActiveRecordError) { update_records }
           assert_equal("cannot update a destroyed record", error.message)
         end
       end

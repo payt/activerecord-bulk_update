@@ -3,6 +3,7 @@
 require "active_record"
 require "arel"
 
+require "activerecord-bulk_update/activerecord/bulk_delete"
 require "activerecord-bulk_update/activerecord/bulk_insert"
 require "activerecord-bulk_update/activerecord/bulk_update"
 require "activerecord-bulk_update/activerecord/querying"
