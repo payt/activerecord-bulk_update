@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module ActiveRecord
-  # Builds the query to insert multiple records in a single statement.
+  # Builds the query to delete multiple records in a single statement.
   class BulkDelete
     attr_reader :model, :deletes, :filters
 
