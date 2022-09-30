@@ -118,6 +118,123 @@ module ActiveRecord
       end
     end
 
+    describe ".bulk_delete" do
+      def bulk_delete
+        @model.bulk_delete(@records)
+      end
+
+      before do
+        @records = [fake_records(:first), fake_records(:second)]
+      end
+
+      it "deletes all given records" do
+        assert_change(-> { @model.count }, by: -2) { bulk_delete }
+      end
+
+      it "returns the records" do
+        assert_equal(@records, bulk_delete)
+      end
+
+      it "marks the records as destroyed" do
+        assert_change(-> { @records.count(&:destroyed?) }, by: 2) { bulk_delete }
+      end
+
+      describe "when passing an empty list" do
+        before { @records = [] }
+
+        it "delets nothing" do
+          refute_change(-> { @model.count }) { bulk_delete }
+        end
+      end
+
+      describe "when passing a single instance" do
+        before { @records = fake_records(:first) }
+
+        it "deletes the record" do
+          assert_change(-> { @model.count }, by: -1) { bulk_delete }
+        end
+      end
+
+      describe "when passing an incorrect type" do
+        before { @records = 1 }
+
+        it "delets nothing and raises an error" do
+          refute_change(-> { @model.count }) { assert_raises(TypeError) { bulk_delete } }
+        end
+      end
+
+      describe "with a model without primary key" do
+        before do
+          @model = PhonyRecord
+          @records = [PhonyRecord.take]
+        end
+
+        it "deletes nothing and raises an error" do
+          refute_change(-> { @model.count }) { assert_raises(ActiveRecord::UnknownPrimaryKey) { bulk_delete } }
+        end
+      end
+    end
+
+    describe ".bulk_delete_all" do
+      def bulk_delete_all
+        @model.bulk_delete_all(@filters)
+      end
+
+      before { @filters = [] }
+
+      it "deletes nothing" do
+        assert_equal(0, bulk_delete_all)
+      end
+
+      describe "with different filters matching different records" do
+        before { @filters = [{ active: [nil, true], rank: 1 }, { active: false, name: "third", rank: [3, 4] }, { id: 2 }] }
+
+        it "deletes all records which match any of the filtering statements" do
+          assert_equal(3, bulk_delete_all)
+        end
+
+        describe "with an additional global filter" do
+          before { @model = @model.where(active: true) }
+
+          it "deletes only the records matching the global filter plus any of the filtering statements" do
+            assert_equal(2, bulk_delete_all)
+          end
+        end
+      end
+
+      describe "with different filters matching a single record" do
+        before { @filters = [{ active: true, rank: 1 }, { id: 1 }] }
+
+        it "deletes the one record" do
+          assert_equal(1, bulk_delete_all)
+        end
+      end
+
+      describe "when no records match the filtering statements" do
+        before { @filters = [{ active: false, rank: 1 }, {}, { id: nil }] }
+
+        it "deletes nothing" do
+          assert_equal(0, bulk_delete_all)
+        end
+      end
+
+      describe "when passing an single filter" do
+        before { @filters = { active: true, rank: 1 } }
+
+        it "deletes the one record" do
+          assert_equal(1, bulk_delete_all)
+        end
+      end
+
+      describe "when passing an incorrect type" do
+        before { @filters = 1 }
+
+        it "delets nothing and raises an error" do
+          refute_change(-> { @model.count }) { assert_raises(TypeError) { bulk_delete_all } }
+        end
+      end
+    end
+
     describe ".bulk_insert" do
       def bulk_insert
         @model.bulk_insert(@records, **@options)

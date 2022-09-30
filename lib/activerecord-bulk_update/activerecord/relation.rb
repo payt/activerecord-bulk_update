@@ -16,6 +16,14 @@ module ActiveRecord
       true
     end
 
+    def bulk_delete(deletes)
+      BulkDelete.new(self, deletes).delete_records
+    end
+
+    def bulk_delete_all(deletes)
+      BulkDelete.new(self, deletes).delete_by_filters
+    end
+
     def bulk_insert(inserts, ignore_persisted: false, touch: false)
       BulkInsert.new(self, inserts, ignore_persisted: ignore_persisted, touch: touch).insert_records
     end

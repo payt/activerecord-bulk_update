@@ -91,7 +91,7 @@ module ActiveRecord
       end
 
       def extract_values_from_records
-        raise ActiveRecordError, "cannot bulk update a model without primary_key" unless primary_key
+        raise UnknownPrimaryKey, model unless primary_key
         raise TypeError, "expected [] or ActiveRecord::Relation, got #{updates}" unless updates.is_a?(Array) || updates.is_a?(Relation)
 
         @filtering_attributes = [primary_key]
