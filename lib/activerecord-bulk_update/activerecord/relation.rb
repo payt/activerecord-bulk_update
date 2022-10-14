@@ -2,8 +2,8 @@
 
 module ActiveRecord
   class Relation
-    def bulk_create(*args)
-      bulk_create!(*args)
+    def bulk_create(*args, **kwargs)
+      bulk_create!(*args, **kwargs)
     rescue ActiveRecord::RecordInvalid
       false
     end
@@ -28,8 +28,8 @@ module ActiveRecord
       BulkInsert.new(self, inserts, ignore_persisted: ignore_persisted, touch: touch).insert_records
     end
 
-    def bulk_update(*args)
-      bulk_update!(*args)
+    def bulk_update(*args, **kwargs)
+      bulk_update!(*args, **kwargs)
     rescue ActiveRecord::RecordInvalid
       false
     end
