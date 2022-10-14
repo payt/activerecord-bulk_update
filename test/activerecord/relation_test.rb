@@ -80,7 +80,7 @@ module ActiveRecord
 
     describe ".bulk_update_all" do
       def bulk_update_all
-        @scope.bulk_update_all({ active: true } => { active: false })
+        @scope.bulk_update_all({ { active: true } => { active: false } })
       end
 
       it "updates the records which match the filtering clause" do
@@ -121,7 +121,7 @@ module ActiveRecord
 
       describe "when updating an Array field" do
         def bulk_update_all
-          @scope.bulk_update_all({ active: true } => { list: [1, 2] })
+          @scope.bulk_update_all({ { active: true } => { list: [1, 2] } })
         end
 
         it "updates the records which match the filtering clause" do
@@ -130,10 +130,10 @@ module ActiveRecord
 
         describe "when updating multiple records" do
           def bulk_update_all
-            @scope.bulk_update_all(
+            @scope.bulk_update_all({
               { active: true } => { list: [1, 2] },
               { active: false } => { list: [1, 2, 3] }
-            )
+            })
           end
 
           it "updates the records which match the filtering clause" do
@@ -144,7 +144,7 @@ module ActiveRecord
 
       describe "when updating an jsonb field" do
         def bulk_update_all
-          @scope.bulk_update_all({ active: true } => { details: { things: [{ number: 1 }, { number: 2 }] } })
+          @scope.bulk_update_all({ { active: true } => { details: { things: [{ number: 1 }, { number: 2 }] } } })
         end
 
         it "updates the records which match the filtering clause" do
@@ -153,10 +153,10 @@ module ActiveRecord
 
         describe "when updating multiple records" do
           def bulk_update_all
-            @scope.bulk_update_all(
+            @scope.bulk_update_all({
               { active: true } => { details: { things: [{ number: 1 }, { number: 2 }] } },
               { active: false } => { details: { things: [{ number: 1 }, { number: 2 }, { number: 3 }] } }
-            )
+            })
           end
 
           it "updates the records which match the filtering clause" do

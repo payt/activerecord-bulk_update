@@ -290,7 +290,7 @@ module ActiveRecord
 
     describe ".bulk_update_all" do
       it "updates all records which match the filtering statements" do
-        assert_equal(2, FakeRecord.bulk_update_all({ active: true } => { active: false }))
+        assert_equal(2, FakeRecord.bulk_update_all({ { active: true } => { active: false } }))
       end
     end
 
