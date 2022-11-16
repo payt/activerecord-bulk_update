@@ -60,7 +60,7 @@ module ActiveRecord
           @inserts = [PhonyRecord.new(name: "1ste"), PhonyRecord.new(name: "2nd")]
         end
 
-        it "inserts the records throught the association" do
+        it "inserts the records through the association" do
           assert_change(-> { @model.count }, by: 2) { insert_records }
         end
 

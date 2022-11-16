@@ -81,7 +81,7 @@ module ActiveRecord
       # @return [ValuesList]
       #
       # The first row is special since Postgresql will determine the datatype based on this row. To prevent PG from
-      # making an incorrect assumption about the datatypes they are explicilty set on the values of the first row.
+      # making an incorrect assumption about the datatypes they are explicitly set on the values of the first row.
       def values_list
         Arel::Nodes::ValuesList.new(values[1..].unshift(
           (filtering_attributes + updating_attributes).zip(values[0]).map do |attr, value|
@@ -115,7 +115,7 @@ module ActiveRecord
         end
       end
 
-      # NOTE: expects the keys in each of the Hahes to be identical. all the same type (Symbol or String) and in order.
+      # NOTE: expects the keys in each of the Hashes to be identical. all the same type (Symbol or String) and in order.
       def extract_values_from_hash
         raise TypeError, "expected {}, got #{updates}" unless updates.is_a?(Hash)
         return if updates.empty?

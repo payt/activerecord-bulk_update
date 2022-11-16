@@ -25,7 +25,7 @@ module Arel
 
       # MONKEYPATCH
       #
-      # In order to be able to include the optional FROM statement the existing method needs to be overriden.
+      # In order to be able to include the optional FROM statement the existing method needs to be overridden.
       def visit_Arel_Nodes_UpdateStatement(o, collector)
         o = prepare_update_statement(o)
 
