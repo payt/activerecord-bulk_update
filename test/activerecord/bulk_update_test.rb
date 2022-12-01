@@ -16,7 +16,7 @@ module ActiveRecord
         @touch = true
       end
 
-      describe "when given activerecord instances with unpersisted changes" do
+      describe "when given instances with unpersisted changes" do
         before do
           first = FakeRecord.find_by!(name: "first").tap { |record| record.name = "new" }
           fake_records(:second).active = false
@@ -71,6 +71,19 @@ module ActiveRecord
 
           it "sets the updated_at to the explicitly given value" do
             assert_change(-> { fake_records(:first).reload.updated_at }, to: @updated_at) { update_records }
+          end
+        end
+
+        describe "when wrapped inside a transaction that is rolled back" do
+          def update_records
+            ActiveRecord::Base.transaction do
+              BulkUpdate.new(@model, @updates, touch: @touch).update_records
+              raise ActiveRecord::Rollback
+            end
+          end
+
+          it "does not mark the changes as persisted" do
+            refute_change(-> { @updates.count(&:has_changes_to_save?) }, from: 3) { update_records }
           end
         end
       end

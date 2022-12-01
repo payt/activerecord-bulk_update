@@ -72,6 +72,19 @@ module ActiveRecord
         end
       end
 
+      describe "when wrapped inside a transaction that is rolled back" do
+        def insert_records
+          ActiveRecord::Base.transaction do
+            BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted, touch: @touch).insert_records
+            raise ActiveRecord::Rollback
+          end
+        end
+
+        it "does not mark the records as persisted" do
+          refute_change(-> { @inserts.count(&:persisted?) }, from: 0) { insert_records }
+        end
+      end
+
       #
       # Scenarios in which nothing happens
       #

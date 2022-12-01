@@ -18,6 +18,14 @@ module ActiveRecord
       extract_values_from_records
       return updates if values.empty?
 
+      # Register the records on the current transaction to allow AR to revert changes in case of a rollback.
+      updates.each do |record|
+        record.send(:remember_transaction_record_state)
+        record.send(:add_to_transaction)
+        record.skip_before_commit_callbacks = true
+        record.skip_commit_callbacks = true
+      end
+
       if touch && timestamps_to_touch.any?
         touch_all
         updates.each { |record| record.assign_attributes(timestamps_to_touch)  }

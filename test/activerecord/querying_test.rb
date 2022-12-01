@@ -173,6 +173,19 @@ module ActiveRecord
           refute_change(-> { @model.count }) { assert_raises(ActiveRecord::UnknownPrimaryKey) { bulk_delete } }
         end
       end
+
+      describe "when wrapped inside a transaction that is rolled back" do
+        def bulk_delete
+          ActiveRecord::Base.transaction do
+            @model.bulk_delete(@records)
+            raise ActiveRecord::Rollback
+          end
+        end
+
+        it "does not mark the records as destroyed" do
+          refute_change(-> { @records.count(&:destroyed?) }, from: 0) { bulk_delete }
+        end
+      end
     end
 
     describe ".bulk_delete_all" do

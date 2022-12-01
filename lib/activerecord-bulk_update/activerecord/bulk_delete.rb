@@ -17,6 +17,14 @@ module ActiveRecord
       extract_filters_from_records
       return [] if filters.empty?
 
+      # Register the records on the current transaction to allow AR to revert changes in case of a rollback.
+      deletes.each do |record|
+        record.send(:remember_transaction_record_state)
+        record.send(:add_to_transaction)
+        record.skip_before_commit_callbacks = true
+        record.skip_commit_callbacks = true
+      end
+
       execute
 
       deletes.each do |delete|
