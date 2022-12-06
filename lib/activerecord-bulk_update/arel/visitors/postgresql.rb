@@ -23,16 +23,16 @@ module Arel
         collector << ")"
       end
 
-      # MONKEYPATCH
+      # MONKEY_PATCH
       #
-      # In order to be able to include the optional FROM statement the existing method needs to be overriden.
+      # In order to be able to include the optional FROM statement the existing method needs to be overridden.
       def visit_Arel_Nodes_UpdateStatement(o, collector)
         o = prepare_update_statement(o)
 
         collector << "UPDATE "
         collector = visit o.relation, collector
         collect_nodes_for o.values, collector, " SET "
-        maybe_visit o.from, collector # MONKEYPATCH
+        maybe_visit o.from, collector # MONKEY_PATCH
         collect_nodes_for o.wheres, collector, " WHERE ", " AND "
         collect_nodes_for o.orders, collector, " ORDER BY "
         maybe_visit o.limit, collector

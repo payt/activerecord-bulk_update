@@ -31,7 +31,7 @@ module ActiveRecord
         assert_equal(true, bulk_create)
       end
 
-      describe "with thouching disabled" do
+      describe "with touching disabled" do
         before { @options[:touch] = false }
 
         it "does not set the created_at timestamp" do
@@ -87,7 +87,7 @@ module ActiveRecord
         assert_equal(true, bulk_create!)
       end
 
-      describe "with thouching disabled" do
+      describe "with touching disabled" do
         before { @options[:touch] = false }
 
         it "does not set the created_at timestamp" do
@@ -142,7 +142,7 @@ module ActiveRecord
       describe "when passing an empty list" do
         before { @records = [] }
 
-        it "delets nothing" do
+        it "deletes nothing" do
           refute_change(-> { @model.count }) { bulk_delete }
         end
       end
@@ -158,7 +158,7 @@ module ActiveRecord
       describe "when passing an incorrect type" do
         before { @records = 1 }
 
-        it "delets nothing and raises an error" do
+        it "deletes nothing and raises an error" do
           refute_change(-> { @model.count }) { assert_raises(TypeError) { bulk_delete } }
         end
       end
@@ -171,6 +171,19 @@ module ActiveRecord
 
         it "deletes nothing and raises an error" do
           refute_change(-> { @model.count }) { assert_raises(ActiveRecord::UnknownPrimaryKey) { bulk_delete } }
+        end
+      end
+
+      describe "when wrapped inside a transaction that is rolled back" do
+        def bulk_delete
+          ActiveRecord::Base.transaction do
+            @model.bulk_delete(@records)
+            raise ActiveRecord::Rollback
+          end
+        end
+
+        it "does not mark the records as destroyed" do
+          refute_change(-> { @records.count(&:destroyed?) }, from: 0) { bulk_delete }
         end
       end
     end
@@ -229,7 +242,7 @@ module ActiveRecord
       describe "when passing an incorrect type" do
         before { @filters = 1 }
 
-        it "delets nothing and raises an error" do
+        it "deletes nothing and raises an error" do
           refute_change(-> { @model.count }) { assert_raises(TypeError) { bulk_delete_all } }
         end
       end
@@ -256,7 +269,7 @@ module ActiveRecord
         assert_equal(@records, bulk_insert)
       end
 
-      describe "with thouching enabled" do
+      describe "with touching enabled" do
         before { @options[:touch] = true }
 
         it "sets the created_at timestamp" do

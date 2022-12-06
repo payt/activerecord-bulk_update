@@ -17,6 +17,14 @@ module ActiveRecord
       extract_values_from_records
       return inserts if values.empty?
 
+      # Register the records on the current transaction to allow AR to revert changes in case of a rollback.
+      inserts.each do |record|
+        record.send(:remember_transaction_record_state)
+        record.send(:add_to_transaction)
+        record.skip_before_commit_callbacks = true
+        record.skip_commit_callbacks = true
+      end
+
       touch_all if touch
 
       inserts.zip(execute).each do |insert, attrs|
