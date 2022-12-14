@@ -21,8 +21,6 @@ module ActiveRecord
       deletes.each do |record|
         record.send(:remember_transaction_record_state)
         record.send(:add_to_transaction)
-        record.skip_before_commit_callbacks = true
-        record.skip_commit_callbacks = true
       end
 
       execute
