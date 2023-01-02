@@ -65,7 +65,7 @@ module ActiveRecord
           assert_change(
             -> { @records.first.errors.added?(:rank, :greater_than_or_equal_to, value: -1, count: 1) },
             to: true
-          ) { assert_raises(ActiveRecord::RecordInvalid) { bulk_update! } }
+          ) { assert_raises(ActiveRecord::BulkInvalid) { bulk_update! } }
         end
 
         describe "with validation disabled" do

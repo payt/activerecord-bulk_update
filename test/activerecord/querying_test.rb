@@ -105,7 +105,7 @@ module ActiveRecord
         end
 
         it "does not create any records, and raises an error" do
-          refute_change(-> { @model.count }) { assert_raises(ActiveRecord::RecordInvalid) { bulk_create! } }
+          refute_change(-> { @model.count }) { assert_raises(ActiveRecord::BulkInvalid) { bulk_create! } }
         end
 
         describe "when disabling the validation" do
