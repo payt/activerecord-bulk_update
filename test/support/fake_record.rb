@@ -17,6 +17,8 @@ ActiveRecord::Migration.create_table(:fake_records, force: true) do |t|
   t.integer :enumerized, default: 0, null: false
 
   t.timestamps null: true
+
+  t.index [:name, :rank], unique: true
 end
 
 ActiveRecord::Migration.create_table(:phony_records, id: false, force: true) do |t|
