@@ -71,7 +71,7 @@ Upserts multiple records into the database in a single query, when no unique key
 ```ruby
 users = [User.new(name: "foo"), User.new(name: "bar")]
 
-User.where(active: true).bulk_upsert(users, touch: true)
+User.where(active: true).bulk_upsert(users, touch: true, unique_by: :name)
 ```
 
 | Option  | Default | Description |

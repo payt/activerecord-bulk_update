@@ -30,11 +30,11 @@ module ActiveRecord
           @unique_key = [:name, :rank]
         end
 
-        it "Updates one and creates one" do
+        it "creates one new record" do
             assert_change(-> { FakeRecord.count }, by: 1) { upsert_records }
           end
 
-        it "update the active state of the duplicate" do
+        it "updates the active state of the duplicate" do
           assert_change(-> { FakeRecord.where(name: "1ste", rank: 1).take.active }, from: true, to: false) { upsert_records }
         end
 
@@ -57,13 +57,13 @@ module ActiveRecord
         end
       end
 
-      describe "when multiple insert have the same unique key" do
+      describe "when multiple inserts have the same unique key" do
         before do
           @unique_key = [:name, :rank]
           @upserts = [FakeRecord.new(name: "1ste", rank: 1), FakeRecord.new(name: "1ste", rank: 1)]
         end
 
-        it "continues without trouble" do
+        it "creates a single new record" do
           assert_change(-> { FakeRecord.count }, by: 1) { upsert_records }
         end
       end
