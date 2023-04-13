@@ -79,7 +79,7 @@ User.where(active: true).bulk_upsert(users, touch: true, unique_by: :name)
 | validate | false | when true it validates the records. |
 | touch | false | when true it sets the created_at and updated_at timestamps. |
 | ignore_persisted | false | when true it ignores any persisted records, when false it raises an exception. |
-| unique_key | nil | when not given it will render an error if ther are duplicates |
+| unique_key | nil | when not given it will render an error if there are duplicates |
 
 
 Unique indexes can be identified by columns or name:

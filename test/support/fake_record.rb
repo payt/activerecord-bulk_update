@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
-
 ActiveRecord::Base.establish_connection(
-adapter:  "postgresql",
+  adapter:  "postgresql",
   host:     "localhost",
   database: "activerecord-bulk_update_test"
 )
