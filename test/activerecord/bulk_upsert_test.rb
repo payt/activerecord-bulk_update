@@ -56,6 +56,17 @@ module ActiveRecord
           assert_raises(ActiveRecord::RecordNotUnique) { upsert_records }
         end
       end
+
+      describe "when multiple insert have the same unique key" do
+        before do
+          @unique_key = [:name, :rank]
+          @upserts = [FakeRecord.new(name: "1ste", rank: 1), FakeRecord.new(name: "1ste", rank: 1)]
+        end
+
+        it "continues without trouble" do
+          assert_change(-> { FakeRecord.count }, by: 1) { upsert_records }
+        end
+      end
     end
   end
 end
