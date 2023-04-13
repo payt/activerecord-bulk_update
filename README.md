@@ -205,5 +205,4 @@ The code in this gem mirrors very closely the code used by methods like `update_
 
 ### Testing
 
-1. Create the test database: `CREATE DATABASE "activerecord-bulk_update_test";`
-2. Run the tests: `bundle exec rake test`
+- Run the tests: `bundle exec rake test`

@@ -14,6 +14,5 @@ gem "rubocop-performance"
 gem "rubocop-rails"
 
 group :test do
-  gem "rspec-rails"
   gem "enumerize"
 end
