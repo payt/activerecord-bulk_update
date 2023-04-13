@@ -52,6 +52,11 @@ module ActiveRecord
       BulkUpdate.new(self, updates, touch: touch).update_records
     end
 
+    def bulk_upsert(upserts, ignore_persisted: false, touch: false, unique_by: nil)
+      BulkUpsert.new(self, upserts, ignore_persisted: ignore_persisted, touch: touch,
+                                    unique_by: unique_by).upsert_records
+    end
+
     def bulk_valid?(records)
       records.map(&:valid?).all?(true)
     end

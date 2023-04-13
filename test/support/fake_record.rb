@@ -6,6 +6,8 @@ ActiveRecord::Base.establish_connection(
   database: "activerecord-bulk_update_test"
 )
 
+ActiveRecord::Tasks::PostgreSQLDatabaseTasks.new(ActiveRecord::Base.connection_db_config).purge
+
 ActiveRecord::Migration.verbose = false
 
 ActiveRecord::Migration.create_table(:fake_records, force: true) do |t|
@@ -17,6 +19,8 @@ ActiveRecord::Migration.create_table(:fake_records, force: true) do |t|
   t.integer :enumerized, default: 0, null: false
 
   t.timestamps null: true
+
+  t.index [:name, :rank], unique: true
 end
 
 ActiveRecord::Migration.create_table(:phony_records, id: false, force: true) do |t|
