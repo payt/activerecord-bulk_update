@@ -112,7 +112,7 @@ module ActiveRecord
         updates.each do |record|
           changes = record.attributes.slice(*updating_attributes).map do |name, value|
             # Using the predicate_builder allows for more complex datatypes like jsonb to be casted correctly.
-            predicate_builder.build_bind_attribute(arel_table[name].name, value).value
+            predicate_builder.build_bind_attribute(arel_table[name].name, value).value_for_database
           end
           next if changes.empty?
 
@@ -142,7 +142,7 @@ module ActiveRecord
           values << filter.to_a.concat(update.to_a).map do |type, value|
             raise ActiveModel::UnknownAttributeError.new(model, type) unless columns_hash[arel_table[type].name]
 
-            predicate_builder.build_bind_attribute(arel_table[type].name, value).value
+            predicate_builder.build_bind_attribute(arel_table[type].name, value).value_for_database
           end
         end
       end

@@ -3,6 +3,7 @@
 require "activerecord-bulk_update"
 
 require "minitest/autorun"
+require "minitest/focus"
 require "pry"
 
 require_relative "support/fake_record"

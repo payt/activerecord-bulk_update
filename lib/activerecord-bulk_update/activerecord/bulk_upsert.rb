@@ -4,12 +4,11 @@ module ActiveRecord
   class BulkUpsert < BulkInsert
     attr_reader :unique_by
 
-    def initialize(model, inserts, ignore_persisted:, touch:, unique_by:)
+    def initialize(model, inserts, ignore_persisted:, unique_by:)
       @model = model
       @inserts = inserts
       @values = []
       @ignore_persisted = ignore_persisted
-      @touch = touch
       @unique_by = unique_by
     end
 

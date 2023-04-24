@@ -10,10 +10,10 @@ module ActiveRecord
       false
     end
 
-    def bulk_create!(inserts, ignore_persisted: false, touch: true, validate: true)
+    def bulk_create!(inserts, ignore_persisted: false, validate: true)
       raise ActiveRecord::BulkInvalid, bulk_errors(inserts) if validate && bulk_invalid?(inserts)
 
-      bulk_insert(inserts, ignore_persisted: ignore_persisted, touch: touch)
+      bulk_insert(inserts, ignore_persisted: ignore_persisted)
 
       true
     end
@@ -26,8 +26,8 @@ module ActiveRecord
       BulkDelete.new(self, deletes).delete_by_filters
     end
 
-    def bulk_insert(inserts, ignore_persisted: false, touch: false)
-      BulkInsert.new(self, inserts, ignore_persisted: ignore_persisted, touch: touch).insert_records
+    def bulk_insert(inserts, ignore_persisted: false)
+      BulkInsert.new(self, inserts, ignore_persisted: ignore_persisted).insert_records
     end
 
     def bulk_update(*args, **kwargs)
@@ -52,9 +52,8 @@ module ActiveRecord
       BulkUpdate.new(self, updates, touch: touch).update_records
     end
 
-    def bulk_upsert(upserts, ignore_persisted: false, touch: false, unique_by: nil)
-      BulkUpsert.new(self, upserts, ignore_persisted: ignore_persisted, touch: touch,
-                                    unique_by: unique_by).upsert_records
+    def bulk_upsert(upserts, ignore_persisted: false, unique_by: nil)
+      BulkUpsert.new(self, upserts, ignore_persisted: ignore_persisted, unique_by: unique_by).upsert_records
     end
 
     def bulk_valid?(records)

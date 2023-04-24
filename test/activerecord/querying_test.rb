@@ -31,18 +31,6 @@ module ActiveRecord
         assert_equal(true, bulk_create)
       end
 
-      describe "with touching disabled" do
-        before { @options[:touch] = false }
-
-        it "does not set the created_at timestamp" do
-          refute_change(-> { @model.where.not(created_at: nil).count }) { bulk_create }
-        end
-
-        it "does not set the updated_at timestamp" do
-          refute_change(-> { @model.where.not(updated_at: nil).count }) { bulk_create }
-        end
-      end
-
       describe "when one of the records is invalid" do
         before do
           @records.sample.rank = -1
@@ -85,18 +73,6 @@ module ActiveRecord
 
       it "returns true" do
         assert_equal(true, bulk_create!)
-      end
-
-      describe "with touching disabled" do
-        before { @options[:touch] = false }
-
-        it "does not set the created_at timestamp" do
-          refute_change(-> { @model.where.not(created_at: nil).count }) { bulk_create! }
-        end
-
-        it "does not set the updated_at timestamp" do
-          refute_change(-> { @model.where.not(updated_at: nil).count }) { bulk_create! }
-        end
       end
 
       describe "when one of the records is invalid" do
@@ -257,28 +233,8 @@ module ActiveRecord
         assert_change(-> { @model.count }, by: 2) { bulk_insert }
       end
 
-      it "does not set the created_at timestamp" do
-        refute_change(-> { @model.where.not(created_at: nil).count }) { bulk_insert }
-      end
-
-      it "does not set the updated_at timestamp" do
-        refute_change(-> { @model.where.not(updated_at: nil).count }) { bulk_insert }
-      end
-
       it "returns the records" do
         assert_equal(@records, bulk_insert)
-      end
-
-      describe "with touching enabled" do
-        before { @options[:touch] = true }
-
-        it "sets the created_at timestamp" do
-          assert_change(-> { @model.where.not(created_at: nil).count }, by: 2) { bulk_insert }
-        end
-
-        it "sets the updated_at timestamp" do
-          assert_change(-> { @model.where.not(updated_at: nil).count }, by: 2) { bulk_insert }
-        end
       end
 
       describe "when one of the records is already persisted" do

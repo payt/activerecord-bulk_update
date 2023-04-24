@@ -15,4 +15,5 @@ gem "rubocop-rails"
 
 group :test do
   gem "enumerize"
+  gem "minitest-focus"
 end
