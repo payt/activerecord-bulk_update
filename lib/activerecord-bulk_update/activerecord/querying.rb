@@ -12,6 +12,7 @@ module ActiveRecord
       :bulk_update!,
       :bulk_update_all,
       :bulk_update_columns,
+      :bulk_upsert,
       :bulk_errors,
       :bulk_valid?,
       :bulk_invalid?,

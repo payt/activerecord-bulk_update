@@ -10,5 +10,5 @@ Gem::Specification.new do |spec|
   spec.homepage    = "https://github.com/payt/activerecord-bulk_update"
   spec.license     = "MIT"
 
-  spec.add_dependency "activerecord", "7.0.4"
+  spec.add_dependency "activerecord", "> 5", "< 8"
 end
