@@ -8,14 +8,12 @@ module ActiveRecord
 
     describe "#upsert_records" do
       def upsert_records
-        BulkUpsert.new(@model, @upserts, ignore_persisted: @ignore_persisted, touch: @touch,
-                       unique_by: @unique_key).upsert_records
+        BulkUpsert.new(@model, @upserts, ignore_persisted: @ignore_persisted, unique_by: @unique_key).upsert_records
       end
 
       before do
         @model = FakeRecord.all
         @upserts = [FakeRecord.new(name: "1ste", rank: 1, active: false), FakeRecord.new(name: "2nd")]
-        @touch = false
         @ignore_persisted = false
         @unique_key = nil
       end

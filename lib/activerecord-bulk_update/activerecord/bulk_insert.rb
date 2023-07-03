@@ -3,14 +3,13 @@
 module ActiveRecord
   # Builds the query to insert multiple records in a single statement.
   class BulkInsert
-    attr_reader :model, :inserts, :values, :ignore_persisted, :touch
+    attr_reader :model, :inserts, :values, :ignore_persisted
 
-    def initialize(model, inserts, ignore_persisted:, touch:)
+    def initialize(model, inserts, ignore_persisted:)
       @model = model
       @inserts = inserts
       @values = []
       @ignore_persisted = ignore_persisted
-      @touch = touch
     end
 
     def insert_records
@@ -22,8 +21,6 @@ module ActiveRecord
         record.send(:remember_transaction_record_state)
         record.send(:add_to_transaction)
       end
-
-      touch_all if touch
 
       inserts.zip(execute).each do |insert, attrs|
         insert.assign_attributes(model.where_values_hash.merge(attrs || {}))
@@ -68,15 +65,6 @@ module ActiveRecord
 
           values << changes
         end
-      end
-
-      def touch_all
-        timestamp_attributes =
-          (model.timestamp_attributes_for_create_in_model + model.timestamp_attributes_for_update_in_model).uniq
-
-        current_times = timestamp_attributes.index_with(model.current_time_from_proper_timezone)
-        values.each { |value| value.reverse_merge!(current_times) }
-        @inserting_attributes.unshift(timestamp_attributes).flatten!
       end
   end
 end
