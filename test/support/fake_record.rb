@@ -45,7 +45,7 @@ class PhonyRecord < ActiveRecord::Base
   belongs_to :fake_record
 end
 
-class MiniTest::Test
+class Minitest::Test
   include ::ActiveRecord::TestFixtures
 
   self.fixture_path = "test/fixtures"
