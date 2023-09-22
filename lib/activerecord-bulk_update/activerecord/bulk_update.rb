@@ -110,11 +110,12 @@ module ActiveRecord
         end.uniq
 
         updates.each do |record|
+          next unless record.has_changes_to_save?
+
           changes = record.attributes.slice(*updating_attributes).map do |name, value|
             # Using the predicate_builder allows for more complex datatypes like jsonb to be casted correctly.
             predicate_builder.build_bind_attribute(arel_table[name].name, value).value_for_database
           end
-          next if changes.empty?
 
           # Taking the current value of the id allows for the updating of the primary_key.
           values << [record.id_in_database, *changes]
