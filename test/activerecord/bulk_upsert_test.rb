@@ -13,7 +13,7 @@ module ActiveRecord
 
       before do
         @model = FakeRecord.all
-        @upserts = [FakeRecord.new(name: "1ste", rank: 1, active: false), FakeRecord.new(name: "2nd")]
+        @upserts = [FakeRecord.new(name: "1st", rank: 1, active: false), FakeRecord.new(name: "2nd")]
         @ignore_persisted = false
         @unique_key = nil
       end
@@ -24,7 +24,7 @@ module ActiveRecord
 
       describe "when unique_by is given" do
         before do
-          FakeRecord.create(name: "1ste", rank: 1, active: true)
+          FakeRecord.create(name: "1st", rank: 1, active: true)
           @unique_key = [:name, :rank]
         end
 
@@ -33,21 +33,21 @@ module ActiveRecord
         end
 
         it "update the active state of the duplicate" do
-          assert_change(-> { FakeRecord.where(name: "1ste", rank: 1).take.active }, from: true, to: false) { upsert_records }
+          assert_change(-> { FakeRecord.where(name: "1st", rank: 1).take.active }, from: true, to: false) { upsert_records }
         end
 
         it "updates the updated_at timestamp" do
-          assert_change(-> { FakeRecord.where(name: "1ste", rank: 1).take.updated_at }) { upsert_records }
+          assert_change(-> { FakeRecord.where(name: "1st", rank: 1).take.updated_at }) { upsert_records }
         end
 
         it "does not update the created_at" do
-          refute_change(-> { FakeRecord.where(name: "1ste", rank: 1).take.created_at }) { upsert_records }
+          refute_change(-> { FakeRecord.where(name: "1st", rank: 1).take.created_at }) { upsert_records }
         end
       end
 
       describe "when no unique_by is given" do
         before do
-          FakeRecord.create(name: "1ste", rank: 1)
+          FakeRecord.create(name: "1st", rank: 1)
         end
 
         it "raises an exception" do
@@ -58,7 +58,7 @@ module ActiveRecord
       describe "when multiple insert have the same unique key" do
         before do
           @unique_key = [:name, :rank]
-          @upserts = [FakeRecord.new(name: "1ste", rank: 1), FakeRecord.new(name: "1ste", rank: 1)]
+          @upserts = [FakeRecord.new(name: "1st", rank: 1), FakeRecord.new(name: "1st", rank: 1)]
         end
 
         it "continues without trouble" do
