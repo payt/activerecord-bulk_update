@@ -261,7 +261,7 @@ module ActiveRecord
           @records = [FakeRecord.new(name: "1st", rank: 1), FakeRecord.new(name: "1st", rank: 1)]
         end
 
-        it "inserts unique records without raising any exceptions" do
+        it "inserts unique records without raising any errors" do
           assert_change(-> { @model.count }, by: 1) { bulk_insert }
         end
       end
