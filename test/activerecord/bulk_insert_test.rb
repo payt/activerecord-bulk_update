@@ -13,7 +13,7 @@ module ActiveRecord
 
       before do
         @model = FakeRecord.all
-        @inserts = [FakeRecord.new(name: "1ste", rank: 1), FakeRecord.new(name: "2nd", rank: 2)]
+        @inserts = [FakeRecord.new(name: "1st", rank: 1), FakeRecord.new(name: "2nd", rank: 2)]
         @ignore_persisted = false
         @ignore_duplicates = false
       end
@@ -43,7 +43,7 @@ module ActiveRecord
       end
 
       describe "when inserting duplicate records" do
-        before { @inserts = [FakeRecord.new(name: "1ste", rank: 1), FakeRecord.new(name: "1ste", rank: 1)] }
+        before { @inserts = [FakeRecord.new(name: "1st", rank: 1), FakeRecord.new(name: "1st", rank: 1)] }
 
         it "raises a exception" do
           error = assert_raises(::ActiveRecord::RecordNotUnique) { insert_records }
@@ -74,7 +74,7 @@ module ActiveRecord
       describe "when chained with an association" do
         before do
           @model = fake_records(:first).phony_records
-          @inserts = [PhonyRecord.new(name: "1ste"), PhonyRecord.new(name: "2nd")]
+          @inserts = [PhonyRecord.new(name: "1st"), PhonyRecord.new(name: "2nd")]
         end
 
         it "inserts the records through the association" do

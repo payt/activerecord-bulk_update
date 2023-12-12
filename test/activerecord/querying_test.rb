@@ -6,7 +6,7 @@ module ActiveRecord
   describe Querying do
     before do
       @model = FakeRecord
-      @records = [FakeRecord.new(name: "1ste"), FakeRecord.new(name: "2nd")]
+      @records = [FakeRecord.new(name: "1st", rank: 1), FakeRecord.new(name: "2nd", rank: 2)]
       @options = {}
     end
 
@@ -255,6 +255,16 @@ module ActiveRecord
           end
         end
       end
+
+      describe "when inserting duplicate records" do
+        before do
+          @records = [FakeRecord.new(name: "1st", rank: 1), FakeRecord.new(name: "1st", rank: 1)]
+        end
+
+        it "inserts unique records without raising any exceptions" do
+          assert_change(-> { @model.count }, by: 1) { bulk_insert }
+        end
+      end
     end
 
     describe ".bulk_insert!" do
@@ -285,6 +295,25 @@ module ActiveRecord
 
           it "creates only the new records" do
             assert_change(-> { @model.count }, by: 2) { bulk_insert! }
+          end
+        end
+      end
+
+      describe "when inserting duplicate records" do
+        before do
+          @records = [FakeRecord.new(name: "1st", rank: 1), FakeRecord.new(name: "1st", rank: 1)]
+        end
+
+        it "raises an error" do
+          error = assert_raises(ActiveRecord::RecordNotUnique) { bulk_insert! }
+          assert_match(/duplicate key value violates unique constraint/, error.message)
+        end
+
+        describe "with ignoring duplicate records enabled" do
+          before { @options[:ignore_duplicates] = true }
+
+          it "creates only the new records" do
+            assert_change(-> { @model.count }, by: 1) { bulk_insert! }
           end
         end
       end
