@@ -257,6 +257,39 @@ module ActiveRecord
       end
     end
 
+    describe ".bulk_insert!" do
+      def bulk_insert!
+        @model.bulk_insert!(@records, **@options)
+      end
+
+      it "inserts all records" do
+        assert_change(-> { @model.count }, by: 2) { bulk_insert! }
+      end
+
+      it "returns the records" do
+        assert_equal(@records, bulk_insert!)
+      end
+
+      describe "when one of the records is already persisted" do
+        before do
+          @records << fake_records(:third)
+        end
+
+        it "raises an error" do
+          error = assert_raises(ActiveRecord::ActiveRecordError) { bulk_insert! }
+          assert_equal("cannot insert a persisted record", error.message)
+        end
+
+        describe "with ignoring persisted records enabled" do
+          before { @options[:ignore_persisted] = true }
+
+          it "creates only the new records" do
+            assert_change(-> { @model.count }, by: 2) { bulk_insert! }
+          end
+        end
+      end
+    end
+
     describe ".bulk_update_all" do
       it "updates all records which match the filtering statements" do
         assert_equal(2, FakeRecord.bulk_update_all({ { active: true } => { active: false } }))
