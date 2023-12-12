@@ -12,11 +12,11 @@ users = [User.new(name: "foo"), User.new(name: "bar")]
 User.where(active: true).bulk_create(users)
 ```
 
-| Option  | Default | Description |
-| ------------- | ------------- | ------------- |
-| validate | true | when true it validates the records. |
-| touch | true | when true it sets the created_at and updated_at timestamps. |
-| ignore_persisted | false | when true it ignores any persisted records, when false it raises an exception. |
+| Option           | Default | Description                                                                    |
+| ---------------- | ------- | ------------------------------------------------------------------------------ |
+| validate         | true    | when true it validates the records.                                            |
+| touch            | true    | when true it sets the created_at and updated_at timestamps.                    |
+| ignore_persisted | false   | when true it ignores any persisted records, when false it raises an exception. |
 
 ### .bulk_create!
 
@@ -54,11 +54,29 @@ users = [User.new(name: "foo"), User.new(name: "bar")]
 User.where(active: true).bulk_insert(users, touch: true)
 ```
 
-| Option  | Default | Description |
-| ------------- | ------------- | ------------- |
-| validate | false | when true it validates the records. |
-| touch | false | when true it sets the created_at and updated_at timestamps. |
-| ignore_persisted | false | when true it ignores any persisted records, when false it raises an exception. |
+| Option            | Default | Description                                                                    |
+| ----------------- | ------- | ------------------------------------------------------------------------------ |
+| validate          | false   | when true it validates the records.                                            |
+| touch             | false   | when true it sets the created_at and updated_at timestamps.                    |
+| ignore_persisted  | false   | when true it ignores any persisted records, when false it raises an exception. |
+| ignore_duplicates | true    | when true it ignores any duplicate records, when false it raises an exception. |
+
+### .bulk_insert!
+
+Inserts multiple records into the database in a single query and raises an exception in case of duplicate records.
+
+```ruby
+users = [User.new(name: "foo"), User.new(name: "bar")]
+
+User.where(active: true).bulk_insert!(users, touch: true)
+```
+
+| Option            | Default | Description                                                                    |
+| ----------------- | ------- | ------------------------------------------------------------------------------ |
+| validate          | false   | when true it validates the records.                                            |
+| touch             | false   | when true it sets the created_at and updated_at timestamps.                    |
+| ignore_persisted  | false   | when true it ignores any persisted records, when false it raises an exception. |
+| ignore_duplicates | false   | when true it ignores any duplicate records, when false it raises an exception. |
 
 #### extras
 
@@ -66,7 +84,7 @@ User.where(active: true).bulk_insert(users, touch: true)
 
 ### .bulk_upsert
 
-Upserts multiple records into the database in a single query, when no unique key is given it will render an error ```ActiveRecord::RecordNotUnique``` if there are any duplicate rows.
+Upserts multiple records into the database in a single query, when no unique key is given it will render an error `ActiveRecord::RecordNotUnique` if there are any duplicate rows.
 
 ```ruby
 users = [User.new(name: "foo"), User.new(name: "bar")]
@@ -74,21 +92,20 @@ users = [User.new(name: "foo"), User.new(name: "bar")]
 User.where(active: true).bulk_upsert(users, touch: true, unique_by: :name)
 ```
 
-| Option  | Default | Description |
-| ------------- | ------------- | ------------- |
-| validate | false | when true it validates the records. |
-| touch | false | when true it sets the created_at and updated_at timestamps. |
-| ignore_persisted | false | when true it ignores any persisted records, when false it raises an exception. |
-| unique_key | nil | when not given it will render an error if there are duplicates |
-
+| Option           | Default | Description                                                                    |
+| ---------------- | ------- | ------------------------------------------------------------------------------ |
+| validate         | false   | when true it validates the records.                                            |
+| touch            | false   | when true it sets the created_at and updated_at timestamps.                    |
+| ignore_persisted | false   | when true it ignores any persisted records, when false it raises an exception. |
+| unique_key       | nil     | when not given it will render an error if there are duplicates                 |
 
 Unique indexes can be identified by columns or name:
+
 ```ruby
 unique_by: :name
 unique_by: %i[ company_id name ]
 unique_by: :index_name_on_company
 ```
-
 
 #### extras
 
@@ -106,10 +123,10 @@ user2.email = "bar@example.com"
 User.where(active: true).bulk_update([user1, user2], validate: false)
 ```
 
-| Option  | Default | Description |
-| ------------- | ------------- | ------------- |
-| validate | true | when true it validates the records. |
-| touch | true | when true it sets the updated_at timestamp. |
+| Option   | Default | Description                                 |
+| -------- | ------- | ------------------------------------------- |
+| validate | true    | when true it validates the records.         |
+| touch    | true    | when true it sets the updated_at timestamp. |
 
 ### .bulk_update!
 
@@ -123,10 +140,10 @@ see: [bulk_update](#bulk_update)
 
 Except the default values for the options are different.
 
-| Option  | Default | Description |
-| ------------- | ------------- | ------------- |
-| validate | false | when true it validates the records. |
-| touch | false | when true it sets the updated_at timestamp. |
+| Option   | Default | Description                                 |
+| -------- | ------- | ------------------------------------------- |
+| validate | false   | when true it validates the records.         |
+| touch    | false   | when true it sets the updated_at timestamp. |
 
 ### .bulk_update_all
 
@@ -140,9 +157,9 @@ changes = {
 User.where(active: true).bulk_update_all(changes)
 ```
 
-| Option  | Default | Description |
-| ------------- | ------------- | ------------- |
-| touch | false | when true it sets the updated_at timestamp. |
+| Option | Default | Description                                 |
+| ------ | ------- | ------------------------------------------- |
+| touch  | false   | when true it sets the updated_at timestamp. |
 
 ### .bulk_valid?
 
@@ -159,7 +176,9 @@ Returns an Array of Hashes containing the error details of the invalid records, 
 It does not return details for valid records. In order to figure out to which record the errors belong the `id` of the record included as well as its index in the given collection.
 
 #### Callbacks
+
 The main difference with the regular ActiveRecord methods is that most callbacks are not triggered on the instances. Only the following callbacks are triggered:
+
 - `before_validation`
 - `after_validation`
 - `before_commit`
