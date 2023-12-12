@@ -8,13 +8,14 @@ module ActiveRecord
 
     describe "#insert_records" do
       def insert_records
-        BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted).insert_records
+        BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted, ignore_duplicates: @ignore_duplicates).insert_records
       end
 
       before do
         @model = FakeRecord.all
-        @inserts = [FakeRecord.new(name: "1ste"), FakeRecord.new(name: "2nd")]
+        @inserts = [FakeRecord.new(name: "1ste", rank: 1), FakeRecord.new(name: "2nd", rank: 2)]
         @ignore_persisted = false
+        @ignore_duplicates = false
       end
 
       it "inserts the records" do
@@ -38,6 +39,23 @@ module ActiveRecord
 
         it "inserts the records" do
           assert_change(-> { FakeRecord.where(enumerized: 1).count }, by: 1) { insert_records }
+        end
+      end
+
+      describe "when inserting duplicate records" do
+        before { @inserts = [FakeRecord.new(name: "1ste", rank: 1), FakeRecord.new(name: "1ste", rank: 1)] }
+
+        it "raises a exception" do
+          error = assert_raises(::ActiveRecord::RecordNotUnique) { insert_records }
+          assert_match(/duplicate key value violates unique constraint/, error.message)
+        end
+
+        describe "when duplicates are ignored" do
+          before { @ignore_duplicates = true }
+
+          it "does not raise an exception" do
+            assert_change(-> { FakeRecord.count }, by: 1) { insert_records }
+          end
         end
       end
 
@@ -74,7 +92,7 @@ module ActiveRecord
       describe "when wrapped inside a transaction that is rolled back" do
         def insert_records
           ActiveRecord::Base.transaction do
-            BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted).insert_records
+            BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted, ignore_duplicates: @ignore_duplicates).insert_records
             raise ActiveRecord::Rollback
           end
         end

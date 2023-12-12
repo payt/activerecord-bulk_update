@@ -26,8 +26,12 @@ module ActiveRecord
       BulkDelete.new(self, deletes).delete_by_filters
     end
 
-    def bulk_insert(inserts, ignore_persisted: false)
-      BulkInsert.new(self, inserts, ignore_persisted: ignore_persisted).insert_records
+    def bulk_insert(inserts, ignore_persisted: false, ignore_duplicates: true)
+      BulkInsert.new(self, inserts, ignore_persisted: ignore_persisted, ignore_duplicates: ignore_duplicates).insert_records
+    end
+
+    def bulk_insert!(inserts, ignore_persisted: false, ignore_duplicates: false)
+      BulkInsert.new(self, inserts, ignore_persisted: ignore_persisted, ignore_duplicates: false).insert_records
     end
 
     def bulk_update(*args, **kwargs)
