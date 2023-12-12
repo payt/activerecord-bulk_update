@@ -68,7 +68,7 @@ Inserts multiple records into the database in a single query and raises an excep
 ```ruby
 users = [User.new(name: "foo"), User.new(name: "bar")]
 
-User.where(active: true).bulk_insert(users, touch: true)
+User.where(active: true).bulk_insert!(users, touch: true)
 ```
 
 | Option            | Default | Description                                                                    |
