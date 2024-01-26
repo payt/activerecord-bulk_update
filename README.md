@@ -51,13 +51,12 @@ Inserts multiple records into the database in a single query.
 ```ruby
 users = [User.new(name: "foo"), User.new(name: "bar")]
 
-User.where(active: true).bulk_insert(users, touch: true)
+User.where(active: true).bulk_insert(users)
 ```
 
 | Option            | Default | Description                                                                    |
 | ----------------- | ------- | ------------------------------------------------------------------------------ |
 | validate          | false   | when true it validates the records.                                            |
-| touch             | false   | when true it sets the created_at and updated_at timestamps.                    |
 | ignore_persisted  | false   | when true it ignores any persisted records, when false it raises an exception. |
 | ignore_duplicates | true    | when true it ignores any duplicate records, when false it raises an exception. |
 
@@ -68,13 +67,12 @@ Inserts multiple records into the database in a single query and raises an excep
 ```ruby
 users = [User.new(name: "foo"), User.new(name: "bar")]
 
-User.where(active: true).bulk_insert!(users, touch: true)
+User.where(active: true).bulk_insert!(users)
 ```
 
 | Option            | Default | Description                                                                    |
 | ----------------- | ------- | ------------------------------------------------------------------------------ |
 | validate          | false   | when true it validates the records.                                            |
-| touch             | false   | when true it sets the created_at and updated_at timestamps.                    |
 | ignore_persisted  | false   | when true it ignores any persisted records, when false it raises an exception. |
 | ignore_duplicates | false   | when true it ignores any duplicate records, when false it raises an exception. |
 
@@ -89,13 +87,12 @@ Upserts multiple records into the database in a single query, when no unique key
 ```ruby
 users = [User.new(name: "foo"), User.new(name: "bar")]
 
-User.where(active: true).bulk_upsert(users, touch: true, unique_by: :name)
+User.where(active: true).bulk_upsert(users, unique_by: :name)
 ```
 
 | Option           | Default | Description                                                                    |
 | ---------------- | ------- | ------------------------------------------------------------------------------ |
 | validate         | false   | when true it validates the records.                                            |
-| touch            | false   | when true it sets the created_at and updated_at timestamps.                    |
 | ignore_persisted | false   | when true it ignores any persisted records, when false it raises an exception. |
 | unique_key       | nil     | when not given it will render an error if there are duplicates                 |
 
