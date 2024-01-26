@@ -56,7 +56,6 @@ User.where(active: true).bulk_insert(users)
 
 | Option            | Default | Description                                                                    |
 | ----------------- | ------- | ------------------------------------------------------------------------------ |
-| validate          | false   | when true it validates the records.                                            |
 | ignore_persisted  | false   | when true it ignores any persisted records, when false it raises an exception. |
 | ignore_duplicates | true    | when true it ignores any duplicate records, when false it raises an exception. |
 
@@ -72,7 +71,6 @@ User.where(active: true).bulk_insert!(users)
 
 | Option            | Default | Description                                                                    |
 | ----------------- | ------- | ------------------------------------------------------------------------------ |
-| validate          | false   | when true it validates the records.                                            |
 | ignore_persisted  | false   | when true it ignores any persisted records, when false it raises an exception. |
 | ignore_duplicates | false   | when true it ignores any duplicate records, when false it raises an exception. |
 
@@ -92,7 +90,6 @@ User.where(active: true).bulk_upsert(users, unique_by: :name)
 
 | Option           | Default | Description                                                                    |
 | ---------------- | ------- | ------------------------------------------------------------------------------ |
-| validate         | false   | when true it validates the records.                                            |
 | ignore_persisted | false   | when true it ignores any persisted records, when false it raises an exception. |
 | unique_key       | nil     | when not given it will render an error if there are duplicates                 |
 
