@@ -3,14 +3,15 @@
 module ActiveRecord
   # Builds the query to insert multiple records in a single statement.
   class BulkInsert
-    attr_reader :model, :inserts, :values, :ignore_persisted, :ignore_duplicates
+    attr_reader :model, :inserts, :values, :ignore_persisted, :ignore_duplicates, :unique_by
 
-    def initialize(model, inserts, ignore_persisted:, ignore_duplicates:)
+    def initialize(model, inserts, ignore_persisted:, ignore_duplicates:, unique_by:)
       @model = model
       @inserts = inserts
       @values = []
       @ignore_persisted = ignore_persisted
       @ignore_duplicates = ignore_duplicates
+      @unique_by = unique_by
     end
 
     def insert_records
@@ -36,8 +37,9 @@ module ActiveRecord
     private
       def execute
         if ignore_duplicates
-          model.insert_all(values, returning: returning_attributes)
+          model.insert_all(values, returning: returning_attributes, unique_by: unique_by)
         else
+          raise ArgumentError.new("do not combine unique_by and ignore_duplicates = false") unless unique_by.nil?
           model.insert_all!(values, returning: returning_attributes)
         end
       end

@@ -27,6 +27,15 @@ ActiveRecord::Migration.create_table(:phony_records, id: false, force: true) do 
   t.references :fake_record
   t.string :name
   t.boolean :active
+
+  t.index [:name, :active], unique: true
+end
+
+ActiveRecord::Migration.create_table(:bogus_records, force: true) do |t|
+  t.string :name
+
+  t.index :id, unique: true
+  t.index [:name], unique: true
 end
 
 class FakeRecord < ActiveRecord::Base
@@ -43,6 +52,9 @@ end
 
 class PhonyRecord < ActiveRecord::Base
   belongs_to :fake_record
+end
+
+class BogusRecord < ActiveRecord::Base
 end
 
 class Minitest::Test

@@ -58,6 +58,7 @@ User.where(active: true).bulk_insert(users)
 | ----------------- | ------- | ------------------------------------------------------------------------------ |
 | ignore_persisted  | false   | when true it ignores any persisted records, when false it raises an exception. |
 | ignore_duplicates | true    | when true it ignores any duplicate records, when false it raises an exception. |
+| unique_by        | nil     | when set, record uniqueness is verified only according to this constraint. See [the insert_all documentation for a full description of this parameter](https://api.rubyonrails.org/v7.1.3.4/classes/ActiveRecord/Persistence/ClassMethods.html#method-i-insert_all). Requires `ignore_duplicates` to be false |
 
 ### .bulk_insert!
 
@@ -73,6 +74,7 @@ User.where(active: true).bulk_insert!(users)
 | ----------------- | ------- | ------------------------------------------------------------------------------ |
 | ignore_persisted  | false   | when true it ignores any persisted records, when false it raises an exception. |
 | ignore_duplicates | false   | when true it ignores any duplicate records, when false it raises an exception. |
+| unique_by        | nil     | when set, record uniqueness is verified according to this constraint. See [the insert_all documentation for a full description of this parameter](https://api.rubyonrails.org/v7.1.3.4/classes/ActiveRecord/Persistence/ClassMethods.html#method-i-insert_all). Requires `ignore_duplicates` to be false |
 
 #### extras
 

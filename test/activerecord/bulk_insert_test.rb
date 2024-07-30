@@ -8,7 +8,7 @@ module ActiveRecord
 
     describe "#insert_records" do
       def insert_records
-        BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted, ignore_duplicates: @ignore_duplicates).insert_records
+        BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted, ignore_duplicates: @ignore_duplicates, unique_by: @unique_by).insert_records
       end
 
       before do
@@ -16,6 +16,7 @@ module ActiveRecord
         @inserts = [FakeRecord.new(name: "1st", rank: 1), FakeRecord.new(name: "2nd", rank: 2)]
         @ignore_persisted = false
         @ignore_duplicates = false
+        @unique_by = nil
       end
 
       it "inserts the records" do
@@ -53,9 +54,46 @@ module ActiveRecord
         describe "when duplicates are ignored" do
           before { @ignore_duplicates = true }
 
-          it "does not raise an exception" do
+          it "inserts the records" do
             assert_change(-> { FakeRecord.count }, by: 1) { insert_records }
           end
+
+          describe "and the duplicate records have a uniqueness constraint on the primary key column" do
+            before do
+              @model = BogusRecord.all
+              @inserts = [BogusRecord.new(name: "Foo"), BogusRecord.new(name: "Foo")]
+            end
+
+            it "raises a exception" do
+              error = assert_raises(::ActiveRecord::RecordNotUnique) { insert_records }
+              assert_match(/duplicate key value violates unique constraint/, error.message)
+            end
+
+            describe "when unique_by is the name of a column" do
+              before { @unique_by = :name }
+
+              it "inserts the unique records" do
+                assert_change(-> { BogusRecord.count }, by: 1) { insert_records }
+              end
+            end
+
+            describe "when unique_by is the name of an index" do
+              before { @unique_by = :index_bogus_records_on_name }
+
+              it "inserts the unique records" do
+                assert_change(-> { BogusRecord.count }, by: 1) { insert_records }
+              end
+            end
+          end
+        end
+      end
+
+      describe "when unique_by is passed" do
+        before { @unique_by = [:id] }
+
+        it "raises a exception" do
+          error = assert_raises(::ArgumentError) { insert_records }
+          assert_match(/do not combine unique_by and ignore_duplicates = false/, error.message)
         end
       end
 
@@ -92,7 +130,7 @@ module ActiveRecord
       describe "when wrapped inside a transaction that is rolled back" do
         def insert_records
           ActiveRecord::Base.transaction do
-            BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted, ignore_duplicates: @ignore_duplicates).insert_records
+            BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted, ignore_duplicates: @ignore_duplicates, unique_by: @unique_by).insert_records
             raise ActiveRecord::Rollback
           end
         end
