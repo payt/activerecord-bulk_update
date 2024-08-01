@@ -4,12 +4,34 @@ module ActiveRecord
   class BulkInvalid < ActiveRecordError; end
 
   class Relation
+
+    # Inserts multiple validated records into the database in a single query.
+    #
+    # @example
+    #
+    # users = [User.new(name: "foo"), User.new(name: "bar")]
+    # User.where(active: true).bulk_create(users)
+    #
+    # @param [Record] inserts The records to insert.
+    # @param [Object] validate If truthy the records are validated.
+    # @param [Object] ignore_persisted If truthy any persisted records are ignored.
+    #
+    # @see {#bulk_insert}
+    #
+    # @raise [ActiveRecord::ActiveRecordError] if inserts contains persisted records and ignore_persisted is false.
+    # @raise [ActiveRecord::RecordNotUnique] if inserts contains duplicated records.
+    # @raise [ActiveRecord::BulkInvalid] if inserts contains invalid records and validate if truthy.
+    #
+    # @return [ActiveRecord::Result] containing the records as they have been inserted.
     def bulk_create(*args, **kwargs)
       bulk_create!(*args, **kwargs)
     rescue ActiveRecord::BulkInvalid
       nil
     end
 
+    # Inserts multiple validated records into the database in a single query.
+    #
+    # @see {#bulk_create}
     def bulk_create!(inserts, ignore_persisted: false, validate: true)
       raise ActiveRecord::BulkInvalid, bulk_errors(inserts) if validate && bulk_invalid?(inserts)
 
