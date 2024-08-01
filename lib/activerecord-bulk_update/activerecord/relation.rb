@@ -7,15 +7,13 @@ module ActiveRecord
     def bulk_create(*args, **kwargs)
       bulk_create!(*args, **kwargs)
     rescue ActiveRecord::BulkInvalid
-      false
+      nil
     end
 
     def bulk_create!(inserts, ignore_persisted: false, validate: true)
       raise ActiveRecord::BulkInvalid, bulk_errors(inserts) if validate && bulk_invalid?(inserts)
 
       bulk_insert(inserts, ignore_persisted: ignore_persisted)
-
-      true
     end
 
     def bulk_delete(deletes)

@@ -4,7 +4,7 @@ Creates, updates or deletes multiple records in a single database statement.
 
 ### .bulk_create
 
-Inserts multiple records into the database in a single query.
+Inserts multiple records into the database in a single query, and returns the created records if the  query succeeded, nil otherwise.
 
 ```ruby
 users = [User.new(name: "foo"), User.new(name: "bar")]

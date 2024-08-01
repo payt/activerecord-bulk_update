@@ -27,8 +27,8 @@ module ActiveRecord
         assert_change(-> { @model.where.not(updated_at: nil).count }, by: 2) { bulk_create }
       end
 
-      it "returns true" do
-        assert_equal(true, bulk_create)
+      it "returns the created records" do
+        assert_equal(@records, bulk_create)
       end
 
       describe "when one of the records is invalid" do
@@ -40,8 +40,8 @@ module ActiveRecord
           refute_change(-> { @model.count }) { bulk_create }
         end
 
-        it "returns false" do
-          assert_equal(false, bulk_create)
+        it "returns nil" do
+          assert_nil(bulk_create)
         end
 
         describe "with validation disabled" do
@@ -71,8 +71,8 @@ module ActiveRecord
         assert_change(-> { @model.where.not(updated_at: nil).count }, by: 2) { bulk_create! }
       end
 
-      it "returns true" do
-        assert_equal(true, bulk_create!)
+      it "returns the created records" do
+        assert_equal(@records, bulk_create!)
       end
 
       describe "when one of the records is invalid" do
