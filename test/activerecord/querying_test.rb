@@ -12,7 +12,7 @@ module ActiveRecord
 
     describe ".bulk_create" do
       def bulk_create
-        @model.bulk_create(@records, **@options)
+        @model.bulk_create(*@records, **@options)
       end
 
       it "creates all records" do
@@ -40,8 +40,8 @@ module ActiveRecord
           refute_change(-> { @model.count }) { bulk_create }
         end
 
-        it "returns nil" do
-          assert_nil(bulk_create)
+        it "returns the unpersisted records" do
+          assert_equal(@records, bulk_create)
         end
 
         describe "with validation disabled" do

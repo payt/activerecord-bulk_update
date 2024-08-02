@@ -24,9 +24,9 @@ module ActiveRecord
     #
     # @return [ActiveRecord::Result] containing the records as they have been inserted.
     def bulk_create(*args, **kwargs)
-      bulk_create!(*args, **kwargs)
+      bulk_create!(args, **kwargs)
     rescue ActiveRecord::BulkInvalid
-      nil
+      args
     end
 
     # Inserts multiple validated records into the database in a single query.
