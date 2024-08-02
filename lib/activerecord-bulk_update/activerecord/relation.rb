@@ -31,6 +31,8 @@ module ActiveRecord
 
     # Inserts multiple validated records into the database in a single query.
     #
+    # @raise [ActiveRecord::BulkInvalid] if one of the records was invalid.
+    #
     # @see {#bulk_create}
     def bulk_create!(inserts, ignore_persisted: false, validate: true)
       raise ActiveRecord::BulkInvalid, bulk_errors(inserts) if validate && bulk_invalid?(inserts)
