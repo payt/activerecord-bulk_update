@@ -4,7 +4,7 @@ Creates, updates or deletes multiple records in a single database statement.
 
 ### .bulk_create
 
-Inserts multiple records into the database in a single query.
+Inserts multiple records into the database in a single query, and returns the (unpersisted) records.
 
 ```ruby
 users = [User.new(name: "foo"), User.new(name: "bar")]
@@ -15,7 +15,6 @@ User.where(active: true).bulk_create(users)
 | Option           | Default | Description                                                                    |
 | ---------------- | ------- | ------------------------------------------------------------------------------ |
 | validate         | true    | when true it validates the records.                                            |
-| touch            | true    | when true it sets the created_at and updated_at timestamps.                    |
 | ignore_persisted | false   | when true it ignores any persisted records, when false it raises an exception. |
 
 ### .bulk_create!
