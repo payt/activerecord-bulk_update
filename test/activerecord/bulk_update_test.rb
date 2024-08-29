@@ -108,7 +108,7 @@ module ActiveRecord
         end
       end
 
-      describe "when updating all records to the same values" do
+      describe "when updating all records to the same value" do
         before do
           @updates = [fake_records(:first), fake_records(:second), fake_records(:third)].each do |record|
             record.name = "asdf"
@@ -116,7 +116,7 @@ module ActiveRecord
           end
         end
 
-        it "clears the value in the database" do
+        it "updates the records in the database" do
           assert_change(-> { FakeRecord.where(name: "asdf", active: true).count }, to: 3) { update_records }
         end
       end
