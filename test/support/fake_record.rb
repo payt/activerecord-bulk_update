@@ -60,7 +60,7 @@ end
 class Minitest::Test
   include ::ActiveRecord::TestFixtures
 
-  self.fixture_path = "test/fixtures"
+  self.fixture_paths << "test/fixtures"
   fixtures :all
 end
 

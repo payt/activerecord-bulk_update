@@ -108,6 +108,19 @@ module ActiveRecord
         end
       end
 
+      describe "when updating all records to the same value" do
+        before do
+          @updates = [fake_records(:first), fake_records(:second), fake_records(:third)].each do |record|
+            record.name = "asdf"
+            record.active = true
+          end
+        end
+
+        it "updates the records in the database" do
+          assert_change(-> { FakeRecord.where(name: "asdf", active: true).count }, to: 3) { update_records }
+        end
+      end
+
       describe "when setting a value with a different datatype" do
         # Test with at least 2 records since the values of the first will be explicitly casted.
         before do
@@ -370,8 +383,8 @@ module ActiveRecord
         before { @updates = { { names: "first" } => { name: "new" } } }
 
         it "raises an exception" do
-          error = assert_raises(::ActiveModel::UnknownAttributeError) { update_by_hash }
-          assert_equal("unknown attribute 'names' for FakeRecord::ActiveRecord_Relation.", error.message)
+          error = assert_raises(::ActiveRecord::StatementInvalid) { update_by_hash }
+          assert_match(/column fake_records.names does not exist/, error.message)
         end
       end
 
@@ -379,8 +392,8 @@ module ActiveRecord
         before { @updates = { { name: "first" } => { names: "new" } } }
 
         it "raises an exception" do
-          error = assert_raises(::ActiveModel::UnknownAttributeError) { update_by_hash }
-          assert_equal("unknown attribute 'names' for FakeRecord::ActiveRecord_Relation.", error.message)
+          error = assert_raises(::ActiveRecord::StatementInvalid) { update_by_hash }
+          assert_match(/column "names" of relation "fake_records" does not exist/, error.message)
         end
       end
 
