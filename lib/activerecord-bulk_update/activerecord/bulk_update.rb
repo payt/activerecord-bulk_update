@@ -61,7 +61,7 @@ module ActiveRecord
         if filter_attributes.one? && update_values.uniq.one?
           attr = filter_attributes.first
           stmt.set(update_attributes.zip(update_values.first).map { |attr, value| [arel_table[attr], value] })
-          arel.where(predicate_builder.build(arel_table[attr], filter_values))
+          arel.where(predicate_builder.build(arel_table[attr], filter_values.flatten))
         else
           stmt.set(update_attributes.map { |attr| [arel_table[attr], source["_#{attr}"]] })
           filter_attributes.each { |attr| arel.where(arel_table[attr].eq(source[attr])) }

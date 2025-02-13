@@ -303,6 +303,24 @@ module ActiveRecord
         end
       end
 
+      describe "when all records update to the same value" do
+        # Test with at least 2 records
+        before do
+          @updates = {
+            { name: "first" } => { name: 1234 },
+            { name: "second" } => { name: 1234 }
+          }
+        end
+
+        it "updates the first record" do
+          assert_change(-> { fake_records(:first).reload.name }, to: "1234") { update_by_hash }
+        end
+
+        it "updates the second record" do
+          assert_change(-> { fake_records(:second).reload.name }, to: "1234") { update_by_hash }
+        end
+      end
+
       describe "when assigning values with a different datatype" do
         # Test with at least 2 records since the values of the first will be explicitly casted.
         before do
