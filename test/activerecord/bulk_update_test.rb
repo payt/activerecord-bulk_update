@@ -147,7 +147,6 @@ module ActiveRecord
 
         describe "when updating records to different values" do
           before do
-            @model = CompositeIdRecord.all
             @updates = [
               CompositeIdRecord.find_by!(code: "a", number: 1).tap { |record| record.active = false },
               CompositeIdRecord.find_by!(code: "b", number: 2).tap { |record| record.active = nil }
@@ -177,6 +176,16 @@ module ActiveRecord
 
           it "updates the second record" do
             assert_change(-> { composite_id_records(:second).reload.active }, to: false) { update_records }
+          end
+        end
+
+        describe "when updating the primary key" do
+          before do
+            @updates = [composite_id_records(:first).tap { |record| record.number = 0 }]
+          end
+
+          it "updates the primary key of the record" do
+            assert_change(-> { @model.where(code: "a", number: 0).count }, by: 1) { update_records }
           end
         end
       end
