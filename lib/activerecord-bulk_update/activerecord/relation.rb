@@ -4,7 +4,6 @@ module ActiveRecord
   class BulkInvalid < ActiveRecordError; end
 
   class Relation
-
     # Inserts multiple validated records into the database in a single query.
     #
     # @example

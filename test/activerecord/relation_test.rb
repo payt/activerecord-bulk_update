@@ -165,5 +165,20 @@ module ActiveRecord
         end
       end
     end
+
+    describe ".bulk_upsert" do
+      def bulk_upsert
+        @scope.bulk_upsert(@records, **@options)
+      end
+
+      before do
+        @records = [FakeRecord.new(name: "1st", rank: 1, active: false), FakeRecord.new(name: "2nd")]
+        @options = {}
+      end
+
+      it "inserts the records when no duplicates are given" do
+        assert_change(-> { FakeRecord.count }, by: 2) { bulk_upsert }
+      end
+    end
   end
 end

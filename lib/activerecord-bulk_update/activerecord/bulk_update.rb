@@ -58,14 +58,13 @@ module ActiveRecord
         stmt.order(*arel.orders)
         stmt.wheres = arel.constraints
 
-        if filter_attributes.one? && update_values.uniq.one?
-          attr = filter_attributes.first
+        if update_values.uniq.one?
           stmt.set(update_attributes.zip(update_values.first).map { |attr, value| [arel_table[attr], value] })
 
-          if attr.is_a?(Array)
-            arel.where(predicate_builder.build_from_hash(attr.map { arel_table[_1].name } => filter_values).reduce(:and))
+          if filter_attributes.many?
+            arel.where(predicate_builder.build_from_hash(filter_attributes.map { arel_table[_1].name } => filter_values).reduce(:and))
           else
-            arel.where(predicate_builder.build(arel_table[attr], filter_values.flatten))
+            arel.where(predicate_builder.build(arel_table[filter_attributes.first], filter_values.flatten))
           end
         else
           stmt.set(update_attributes.map { |attr| [arel_table[attr], source["_#{attr}"]] })
