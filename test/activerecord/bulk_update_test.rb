@@ -140,6 +140,47 @@ module ActiveRecord
         end
       end
 
+      describe "when updating a record with a composite primary key" do
+        before do
+          @model = CompositeIdRecord.all
+        end
+
+        describe "when updating records to different values" do
+          before do
+            @model = CompositeIdRecord.all
+            @updates = [
+              CompositeIdRecord.find_by!(code: "a", number: 1).tap { |record| record.active = false },
+              CompositeIdRecord.find_by!(code: "b", number: 2).tap { |record| record.active = nil }
+            ]
+          end
+
+          it "updates the first record" do
+            assert_change(-> { composite_id_records(:first).reload.active }, to: false) { update_records }
+          end
+
+          it "updates the second record" do
+            assert_change(-> { composite_id_records(:second).reload.active }, to: nil) { update_records }
+          end
+        end
+
+        describe "when updating records to the same values" do
+          before do
+            @updates = [
+              CompositeIdRecord.find_by!(code: "a", number: 1).tap { |record| record.active = false },
+              CompositeIdRecord.find_by!(code: "b", number: 2).tap { |record| record.active = false }
+            ]
+          end
+
+          it "updates the first record" do
+            assert_change(-> { composite_id_records(:first).reload.active }, to: false) { update_records }
+          end
+
+          it "updates the second record" do
+            assert_change(-> { composite_id_records(:second).reload.active }, to: false) { update_records }
+          end
+        end
+      end
+
       #
       # Scenarios in which nothing happens
       #

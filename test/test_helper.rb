@@ -6,5 +6,5 @@ require "minitest/autorun"
 require "minitest/focus"
 require "pry"
 
-require_relative "support/fake_record"
+require_relative "support/database_setup"
 require_relative "support/assert_change"

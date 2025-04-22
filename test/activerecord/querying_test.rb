@@ -139,6 +139,17 @@ module ActiveRecord
         end
       end
 
+      describe "with a model with composite primary key" do
+        before do
+          @model = CompositeIdRecord
+          @records = [composite_id_records(:first), composite_id_records(:second)]
+        end
+
+        it "deletes the record" do
+          assert_change(-> { @model.count }, by: -2) { bulk_delete }
+        end
+      end
+
       describe "with a model without primary key" do
         before do
           @model = PhonyRecord
