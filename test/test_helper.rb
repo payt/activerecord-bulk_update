@@ -1,13 +1,20 @@
 # frozen_string_literal: true
 
+# Coverage
 require "simplecov"
 SimpleCov.start "rails"
+SimpleCov.minimum_coverage 100
 
-require "minitest/autorun"
-require "minitest/focus"
-require "pry"
-
+# Codebase
 require "activerecord-bulk_update"
 
+# Test framework
+require "minitest/autorun"
+require "minitest/focus"
+
+# Test helpers
 require_relative "support/database_setup"
 require_relative "support/assert_change"
+
+# Debugger
+require "pry"
