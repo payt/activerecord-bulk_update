@@ -80,7 +80,7 @@ module ActiveRecord
           record.id_in_database
         end.compact
 
-        @filters << { primary_key => ids }
+        @filters << { primary_key => ids } if ids.any?
       end
 
       def extract_filters_from_array
