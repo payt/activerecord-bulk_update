@@ -58,10 +58,14 @@ module ActiveRecord
         stmt.order(*arel.orders)
         stmt.wheres = arel.constraints
 
-        if filter_attributes.one? && update_values.uniq.one?
-          attr = filter_attributes.first
+        if update_values.uniq.one?
           stmt.set(update_attributes.zip(update_values.first).map { |attr, value| [arel_table[attr], value] })
-          arel.where(predicate_builder.build(arel_table[attr], filter_values.flatten))
+
+          if filter_attributes.many?
+            arel.where(predicate_builder.build_from_hash(filter_attributes.map { arel_table[_1].name } => filter_values).reduce(:and))
+          else
+            arel.where(predicate_builder.build(arel_table[filter_attributes.first], filter_values.flatten))
+          end
         else
           stmt.set(update_attributes.map { |attr| [arel_table[attr], source["_#{attr}"]] })
           filter_attributes.each { |attr| arel.where(arel_table[attr].eq(source[attr])) }
@@ -86,7 +90,7 @@ module ActiveRecord
       # @return [ValuesList]
       #
       # The first row is special since Postgresql will determine the datatype based on this row. To prevent PG from
-      # making an incorrect assumption about the datatypes these are explicitly set on the values of the first row.
+      # making an incorrect assumption about the data types these are explicitly set on the values of the first row.
       def values_list
         Arel::Nodes::ValuesList.new(values[1..].unshift(
           (filter_attributes + update_attributes).zip(values[0]).map do |attr, value|
@@ -103,7 +107,7 @@ module ActiveRecord
         raise UnknownPrimaryKey, model unless primary_key
         raise TypeError, "expected [] or ActiveRecord::Relation, got #{updates}" unless updates.is_a?(Array) || updates.is_a?(Relation)
 
-        @filter_attributes = [primary_key]
+        @filter_attributes = [*primary_key]
         @update_attributes = updates.flat_map do |record|
           raise TypeError, "expected #{model.new}, got #{record}" unless record.is_a?(model.klass)
           raise ActiveRecordError, "cannot update a new record" if record.new_record?
@@ -116,7 +120,7 @@ module ActiveRecord
           next unless record.has_changes_to_save?
 
           changes = record.attributes.slice(*update_attributes).map do |name, value|
-            # Using the predicate_builder allows for more complex datatypes like jsonb to be casted correctly.
+            # Using the predicate_builder allows for more complex data types like jsonb to be casted correctly.
             predicate_builder.build_bind_attribute(arel_table[name].name, value).value_for_database
           end
 

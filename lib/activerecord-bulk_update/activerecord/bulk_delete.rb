@@ -53,9 +53,17 @@ module ActiveRecord
         stmt.order(*arel.orders)
         stmt.wheres = arel.constraints
 
-        stmt.where filters
-          .map { |filter| filter.map { |attr, value| predicate_builder.build(arel_table[attr], value) }.reduce(&:and) }
-          .reduce(&:or)
+        filters.map! do |filter|
+          filter.map do |attr, value|
+            if attr.is_a?(Array)
+              predicate_builder.build_from_hash(attr.map { arel_table[_1].name } => value).reduce(&:and)
+            else
+              predicate_builder.build(arel_table[attr], value)
+            end
+          end.reduce(&:and)
+        end
+
+        stmt.where filters.reduce(&:or)
 
         stmt
       end
@@ -72,7 +80,7 @@ module ActiveRecord
           record.id_in_database
         end.compact
 
-        @filters << { primary_key => ids }
+        @filters << { primary_key => ids } if ids.any?
       end
 
       def extract_filters_from_array

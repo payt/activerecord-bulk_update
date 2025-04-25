@@ -1,0 +1,17 @@
+services:
+  ruby:
+    build:
+      context: .
+    environment:
+      PG_HOST: postgres
+      PG_PASSWORD: password
+      PG_USER: user
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: activerecord-bulk_update_test
