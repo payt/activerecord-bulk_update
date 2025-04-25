@@ -217,6 +217,12 @@ The code in this gem mirrors very closely the code used by methods like `update_
   - The validation callbacks are not performed within a transaction
 - Improve performance when including a limit, order or offset clause in an update statement
 
+### Development
+
+- Easiest way to start development is using VSCode with the Devcontainer extension. This will automatically install all dependencies in Docker containers and open VSCode in the context of the gem.
+- Another option is to use Docker compose to setup the dependencies (`docker compose build`), then edit the code locally on your machine and run tests using `docker compose up`
+- If you do not want to use Docker install Ruby and Postgresql locally. Install Ruby dependencies with `bundle install`. Set PG env variables to connect to a database to run the test on. Check test/support/database_setup.rb for details.
+
 ### Testing
 
 - Run the tests: `bundle exec rake test`

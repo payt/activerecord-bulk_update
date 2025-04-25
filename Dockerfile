@@ -7,4 +7,4 @@ RUN bundle install
 
 COPY . .
 
-CMD ["irb"]
+CMD ["rake", "test"]

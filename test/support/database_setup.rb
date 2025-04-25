@@ -2,11 +2,11 @@
 
 ActiveRecord::Base.establish_connection(
   adapter:  "postgresql",
-  host:     ENV["PG_HOST"] || "localhost",
-  port:     ENV["PG_PORT"] || 5432,
-  username: ENV["PG_USER"] || "postgres",
-  password: ENV["PG_PASSWORD"] || "",
-  database: "activerecord-bulk_update_test"
+  host:     ENV["PGHOST"] || "localhost",
+  port:     ENV["PGPORT"] || 5432,
+  username: ENV["PGUSER"] || "postgres",
+  password: ENV["PGPASSWORD"] || "",
+  database: ENV["PGDATABASE"] || "activerecord-bulk_update_test"
 )
 
 ActiveRecord::Tasks::PostgreSQLDatabaseTasks.new(ActiveRecord::Base.connection_db_config).purge
