@@ -1,5 +1,8 @@
 # frozen_string_literal: true
 
+# Debugger
+require "pry"
+
 # Coverage
 require "simplecov"
 SimpleCov.start "rails"
@@ -15,6 +18,3 @@ require "minitest/focus"
 # Test helpers
 require_relative "support/database_setup"
 require_relative "support/assert_change"
-
-# Debugger
-require "pry"

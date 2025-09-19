@@ -3,9 +3,9 @@ services:
     build:
       context: .
     environment:
-      PG_HOST: postgres
-      PG_PASSWORD: password
-      PG_USER: user
+      PGHOST: postgres
+      PGPASSWORD: password
+      PGUSER: user
     depends_on:
       - postgres
 
