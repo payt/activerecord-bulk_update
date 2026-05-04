@@ -25,17 +25,30 @@ module Arel
 
       # MONKEY_PATCH
       #
-      # In order to be able to include the optional FROM statement the existing method needs to be overridden.
+      # Mirrors ActiveRecord 8.1's UPDATE-with-JOIN handling (alias the target,
+      # move joins into a FROM clause) and additionally emits the optional
+      # `o.from` node used by bulk_update's VALUES-list updates.
       def visit_Arel_Nodes_UpdateStatement(o, collector)
+        collector.retryable = false
         o = prepare_update_statement(o)
 
         collector << "UPDATE "
-        collector = visit o.relation, collector
-        collect_nodes_for o.values, collector, " SET "
+
+        if has_join_sources?(o)
+          collector = visit o.relation.left, collector
+          collect_nodes_for o.values, collector, " SET "
+          collector << " FROM "
+          collector = inject_join o.relation.right, collector, " "
+        else
+          collector = visit o.relation, collector
+          collect_nodes_for o.values, collector, " SET "
+        end
+
         maybe_visit o.from, collector # MONKEY_PATCH
         collect_nodes_for o.wheres, collector, " WHERE ", " AND "
         collect_nodes_for o.orders, collector, " ORDER BY "
         maybe_visit o.limit, collector
+        maybe_visit o.comment, collector
       end
     end
   end

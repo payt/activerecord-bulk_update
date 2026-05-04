@@ -41,6 +41,18 @@ module Arel
         end
       end
 
+      describe "#visit_Arel_Nodes_UpdateStatement" do
+        describe "when the relation has join sources" do
+          it "aliases the target table and moves joins into a FROM clause" do
+            relation = FakeRecord.joins(:phony_records).where(phony_records: { name: "first" })
+
+            assert_equal(1, relation.update_all(active: false))
+            assert_equal(false, fake_records(:first).reload.active)
+            assert_equal(true, fake_records(:second).reload.active)
+          end
+        end
+      end
+
       describe "#visit_Arel_Nodes_From" do
         def visit_Arel_Nodes_From
           PostgreSQL
