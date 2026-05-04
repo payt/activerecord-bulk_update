@@ -27,9 +27,11 @@ module Arel
       #
       # Mirrors ActiveRecord 8.1's UPDATE-with-JOIN handling (alias the target,
       # move joins into a FROM clause) and additionally emits the optional
-      # `o.from` node used by bulk_update's VALUES-list updates.
+      # `o.from` node used by bulk_update's VALUES-list updates. The gem
+      # supports ActiveRecord > 6, so accessors that only exist on newer
+      # versions (`retryable=`, `comment`) are guarded.
       def visit_Arel_Nodes_UpdateStatement(o, collector)
-        collector.retryable = false
+        collector.retryable = false if collector.respond_to?(:retryable=)
         o = prepare_update_statement(o)
 
         collector << "UPDATE "
@@ -42,13 +44,13 @@ module Arel
         else
           collector = visit o.relation, collector
           collect_nodes_for o.values, collector, " SET "
+          maybe_visit o.from, collector # MONKEY_PATCH
         end
 
-        maybe_visit o.from, collector # MONKEY_PATCH
         collect_nodes_for o.wheres, collector, " WHERE ", " AND "
         collect_nodes_for o.orders, collector, " ORDER BY "
         maybe_visit o.limit, collector
-        maybe_visit o.comment, collector
+        maybe_visit o.comment, collector if o.respond_to?(:comment)
       end
     end
   end
