@@ -240,6 +240,8 @@ module ActiveRecord
         @model.bulk_insert(@records, **@options)
       end
 
+      before { @options[:unique_by] = [:name, :rank] }
+
       it "inserts all records" do
         assert_change(-> { @model.count }, by: 2) { bulk_insert }
       end
@@ -274,6 +276,14 @@ module ActiveRecord
 
         it "inserts unique records without raising any errors" do
           assert_change(-> { @model.count }, by: 1) { bulk_insert }
+        end
+      end
+
+      describe "when assign_records is disabled" do
+        before { @options[:assign_records] = false }
+
+        it "inserts all records without assigning them" do
+          assert_change(-> { @model.count }, by: 2) { assert_equal(true, bulk_insert) }
         end
       end
     end
@@ -321,7 +331,10 @@ module ActiveRecord
         end
 
         describe "with ignoring duplicate records enabled" do
-          before { @options[:ignore_duplicates] = true }
+          before do
+            @options[:ignore_duplicates] = true
+            @options[:unique_by] = [:name, :rank]
+          end
 
           it "creates only the new records" do
             assert_change(-> { @model.count }, by: 1) { bulk_insert! }

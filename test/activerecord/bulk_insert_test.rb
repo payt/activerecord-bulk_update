@@ -8,7 +8,11 @@ module ActiveRecord
 
     describe "#insert_records" do
       def insert_records
-        BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted, ignore_duplicates: @ignore_duplicates, unique_by: @unique_by).insert_records
+        BulkInsert.new(
+          @model, @inserts,
+          ignore_persisted: @ignore_persisted, ignore_duplicates: @ignore_duplicates, unique_by: @unique_by,
+          assign_records: @assign_records
+        ).insert_records
       end
 
       before do
@@ -17,6 +21,7 @@ module ActiveRecord
         @ignore_persisted = false
         @ignore_duplicates = false
         @unique_by = nil
+        @assign_records = true
       end
 
       it "inserts the records" do
@@ -54,14 +59,33 @@ module ActiveRecord
         describe "when duplicates are ignored" do
           before { @ignore_duplicates = true }
 
-          it "inserts the records" do
-            assert_change(-> { FakeRecord.count }, by: 1) { insert_records }
+          it "raises without inserting anything, since a skipped row could not be traced back" do
+            error = nil
+            refute_change(-> { FakeRecord.count }) { error = assert_raises(::ArgumentError) { insert_records } }
+            assert_match(/pass unique_by/, error.message)
+          end
+
+          describe "with unique_by given" do
+            before { @unique_by = [:name, :rank] }
+
+            it "inserts the records" do
+              assert_change(-> { FakeRecord.count }, by: 1) { insert_records }
+            end
+          end
+
+          describe "with assign_records disabled" do
+            before { @assign_records = false }
+
+            it "inserts the records" do
+              assert_change(-> { FakeRecord.count }, by: 1) { insert_records }
+            end
           end
 
           describe "and the duplicate records have a uniqueness constraint on the primary key column" do
             before do
               @model = BogusRecord.all
               @inserts = [BogusRecord.new(name: "Foo"), BogusRecord.new(name: "Foo")]
+              @unique_by = :id
             end
 
             it "raises a exception" do
@@ -84,6 +108,113 @@ module ActiveRecord
                 assert_change(-> { BogusRecord.count }, by: 1) { insert_records }
               end
             end
+          end
+        end
+
+        describe "when unique_by identifies the conflicting record" do
+          before do
+            @ignore_duplicates = true
+            @unique_by = [:name, :rank]
+            @inserts = [FakeRecord.new(name: "first", rank: 1), FakeRecord.new(name: "new", rank: 99)]
+          end
+
+          it "assigns the existing row to the conflicting record" do
+            insert_records
+            assert_equal(fake_records(:first).id, @inserts[0].id)
+          end
+
+          it "assigns a newly generated id to the inserted record" do
+            insert_records
+            refute_equal(fake_records(:first).id, @inserts[1].id) # rubocop:disable Rails/RefuteMethods
+            assert(@inserts[1].id)
+          end
+
+          it "marks the conflicting record as not previously a new record" do
+            insert_records
+            refute(@inserts[0].previously_new_record?) # rubocop:disable Rails/RefuteMethods
+          end
+
+          it "marks the inserted record as previously a new record" do
+            insert_records
+            assert(@inserts[1].previously_new_record?)
+          end
+
+          describe "and every record conflicts with an existing row" do
+            before { @inserts = [FakeRecord.new(name: "first", rank: 1), FakeRecord.new(name: "second", rank: 2)] }
+
+            it "assigns each record the state of its existing row" do
+              insert_records
+              assert_equal(fake_records(:first).id, @inserts[0].id)
+              assert_equal(fake_records(:second).id, @inserts[1].id)
+            end
+          end
+
+          describe "with a unique_by naming a primary key that has no unique index of its own" do
+            before do
+              @model = CompositeIdRecord.all
+              @unique_by = [:code, :number]
+              @inserts = [
+                CompositeIdRecord.new(code: composite_id_records(:first).code, number: composite_id_records(:first).number),
+                CompositeIdRecord.new(code: "new", number: 99)
+              ]
+            end
+
+            it "assigns the existing row to the conflicting record" do
+              insert_records
+              assert_equal(composite_id_records(:first).active, @inserts[0].active)
+              refute(@inserts[0].previously_new_record?) # rubocop:disable Rails/RefuteMethods
+            end
+
+            it "inserts the other record" do
+              assert_change(-> { CompositeIdRecord.count }, by: 1) { insert_records }
+            end
+          end
+        end
+      end
+
+      describe "when ignoring persisted records, given a mix of persisted and new records" do
+        before do
+          @ignore_persisted = true
+          @inserts = [fake_records(:first), FakeRecord.new(name: "new", rank: 99)]
+        end
+
+        it "assigns the generated id to the new record, not the persisted one" do
+          persisted_id = fake_records(:first).id
+          insert_records
+          assert_equal(persisted_id, @inserts[0].id)
+          refute_nil(@inserts[1].id) # rubocop:disable Rails/RefuteMethods
+          refute_equal(persisted_id, @inserts[1].id) # rubocop:disable Rails/RefuteMethods
+        end
+      end
+
+      describe "when assign_records is disabled" do
+        before { @assign_records = false }
+
+        it "returns true" do
+          assert_equal(true, insert_records)
+        end
+
+        it "still inserts the records" do
+          assert_change(-> { FakeRecord.count }, by: 2) { insert_records }
+        end
+
+        it "leaves the records unassigned" do
+          refute_change(-> { @inserts.count(&:persisted?) }, from: 0) { insert_records }
+        end
+
+        it "leaves the records new" do
+          insert_records
+          assert(@inserts.all?(&:new_record?))
+        end
+
+        describe "when duplicates are ignored" do
+          before do
+            @ignore_duplicates = true
+            @inserts = [FakeRecord.new(name: "1st", rank: 1), FakeRecord.new(name: "1st", rank: 1)]
+          end
+
+          it "inserts the unique records without raising" do
+            assert_change(-> { FakeRecord.count }, by: 1) { insert_records }
           end
         end
       end
@@ -130,13 +261,29 @@ module ActiveRecord
       describe "when wrapped inside a transaction that is rolled back" do
         def insert_records
           ActiveRecord::Base.transaction do
-            BulkInsert.new(@model, @inserts, ignore_persisted: @ignore_persisted, ignore_duplicates: @ignore_duplicates, unique_by: @unique_by).insert_records
+            BulkInsert.new(
+              @model, @inserts,
+              ignore_persisted: @ignore_persisted, ignore_duplicates: @ignore_duplicates, unique_by: @unique_by,
+              assign_records: @assign_records
+            ).insert_records
             raise ActiveRecord::Rollback
           end
         end
 
         it "does not mark the records as persisted" do
           refute_change(-> { @inserts.count(&:persisted?) }, from: 0) { insert_records }
+        end
+
+        describe "and one of the records conflicts with an existing row" do
+          before do
+            @ignore_duplicates = true
+            @unique_by = [:name, :rank]
+            @inserts = [FakeRecord.new(name: "first", rank: 1), FakeRecord.new(name: "new", rank: 99)]
+          end
+
+          it "does not mark the records as persisted" do
+            refute_change(-> { @inserts.count(&:persisted?) }, from: 0) { insert_records }
+          end
         end
       end
 
