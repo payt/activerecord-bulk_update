@@ -21,7 +21,8 @@ module ActiveRecord
     # @raise [ActiveRecord::RecordNotUnique] if inserts contains duplicated records.
     # @raise [ActiveRecord::BulkInvalid] if inserts contains invalid records and validate if truthy.
     #
-    # @return [ActiveRecord::Result] containing the records as they have been inserted.
+    # @return [Array<Record>, Relation] the given records, each carrying the state of the row that is in the
+    #   database, or the unpersisted records if any of them were invalid.
     def bulk_create(*args, **kwargs)
       bulk_create!(args, **kwargs)
     rescue ActiveRecord::BulkInvalid
@@ -33,6 +34,9 @@ module ActiveRecord
     # @raise [ActiveRecord::BulkInvalid] if one of the records was invalid.
     #
     # @see {#bulk_create}
+    #
+    # @return [Array<Record>, Relation] the given records, each carrying the state of the row that is in the
+    #   database.
     def bulk_create!(inserts, ignore_persisted: false, validate: true)
       raise ActiveRecord::BulkInvalid, bulk_errors(inserts) if validate && bulk_invalid?(inserts)
 
