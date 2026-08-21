@@ -53,7 +53,7 @@ Inserts multiple records into the database in a single query.
 ```ruby
 users = [User.new(name: "foo"), User.new(name: "bar")]
 
-User.where(active: true).bulk_insert(users)
+User.where(active: true).bulk_insert(users, unique_by: :name)
 ```
 
 | Option            | Default | Description                                                                    |
