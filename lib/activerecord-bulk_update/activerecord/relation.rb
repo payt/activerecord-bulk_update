@@ -21,7 +21,8 @@ module ActiveRecord
     # @raise [ActiveRecord::RecordNotUnique] if inserts contains duplicated records.
     # @raise [ActiveRecord::BulkInvalid] if inserts contains invalid records and validate if truthy.
     #
-    # @return [ActiveRecord::Result] containing the records as they have been inserted.
+    # @return [Array<Record>, Relation] the given records, each carrying the state of the row that is in the
+    #   database, or the unpersisted records if any of them were invalid.
     def bulk_create(*args, **kwargs)
       bulk_create!(args, **kwargs)
     rescue ActiveRecord::BulkInvalid
@@ -33,10 +34,13 @@ module ActiveRecord
     # @raise [ActiveRecord::BulkInvalid] if one of the records was invalid.
     #
     # @see {#bulk_create}
+    #
+    # @return [Array<Record>, Relation] the given records, each carrying the state of the row that is in the
+    #   database.
     def bulk_create!(inserts, ignore_persisted: false, validate: true)
       raise ActiveRecord::BulkInvalid, bulk_errors(inserts) if validate && bulk_invalid?(inserts)
 
-      bulk_insert(inserts, ignore_persisted: ignore_persisted)
+      bulk_insert(inserts, ignore_persisted: ignore_persisted, ignore_duplicates: false)
     end
 
     def bulk_delete(deletes)
@@ -57,25 +61,39 @@ module ActiveRecord
     # @param [Record] inserts The records to insert.
     # @param [Object] ignore_persisted If truthy any persisted records are ignored.
     # @param [Object] ignore_duplicates If truthy any duplicate records are ignored.
-    # @param [Object] unique_by Uniqueness constraint to skip rows by. Requires +ignore_duplicates+ to be
-    #   falsey. {ActiveRecord::Persistence::ClassMethods.insert_all See ActiveRecord's insert_all}
+    # @param [Object] unique_by Uniqueness constraint to skip rows by. Required when +ignore_duplicates+ and
+    #   +assign_records+ are both truthy, so a skipped row can be traced back to the record it came from.
+    #   {ActiveRecord::Persistence::ClassMethods.insert_all See ActiveRecord's insert_all}
+    # @param [Object] assign_records If truthy each given record is left in the state of its row in the
+    #   database (costing one extra query when rows were skipped); if falsey the records are left untouched
+    #   and +true+ is returned instead.
     #
     # @see {ActiveRecord::Persistence::ClassMethods.insert_all ActiveRecord's insert_all}
     #
     # @raise [ActiveRecord::ActiveRecordError] if inserts contains persisted records and ignore_persisted is false.
     # @raise [ActiveRecord::RecordNotUnique] if inserts contains duplicated records and ignore_duplicates is false.
-    # @raise [ArgumentError] if both +unique_by+ and +ignore_duplicates+ are provided.
+    # @raise [ArgumentError] if +unique_by+ is given while +ignore_duplicates+ is false, or if +unique_by+ is
+    #   missing while +ignore_duplicates+ and +assign_records+ are both true.
     #
-    # @return [ActiveRecord::Result] containing the records as they have been inserted.
-    def bulk_insert(inserts, ignore_persisted: false, ignore_duplicates: true, unique_by: nil)
-      BulkInsert.new(self, inserts, ignore_persisted: ignore_persisted, ignore_duplicates: ignore_duplicates, unique_by: unique_by).insert_records
+    # @return [Array<Record>, Relation, true] the given records, each carrying the state of the row that is in
+    #   the database, or true when assign_records is false.
+    def bulk_insert(inserts, ignore_persisted: false, ignore_duplicates: true, unique_by: nil, assign_records: true)
+      BulkInsert.new(
+        self, inserts,
+        ignore_persisted: ignore_persisted, ignore_duplicates: ignore_duplicates, unique_by: unique_by,
+        assign_records: assign_records
+      ).insert_records
     end
 
     # Inserts multiple records into the database in a single query.
     #
     # @see {.bulk_insert}
-    def bulk_insert!(inserts, ignore_persisted: false, ignore_duplicates: false, unique_by: nil)
-      BulkInsert.new(self, inserts, ignore_persisted: ignore_persisted, ignore_duplicates: ignore_duplicates, unique_by: unique_by).insert_records
+    def bulk_insert!(inserts, ignore_persisted: false, ignore_duplicates: false, unique_by: nil, assign_records: true)
+      BulkInsert.new(
+        self, inserts,
+        ignore_persisted: ignore_persisted, ignore_duplicates: ignore_duplicates, unique_by: unique_by,
+        assign_records: assign_records
+      ).insert_records
     end
 
     def bulk_update(*args, **kwargs)
